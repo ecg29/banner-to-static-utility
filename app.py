@@ -5,6 +5,7 @@ import os
 import tempfile
 import logging
 import time
+import re
 from datetime import datetime
 from urllib.parse import urlparse
 import json
@@ -1117,8 +1118,13 @@ def generate_banner_filename(banner_info, url, format='png', index=None):
     if banner_name:
         # Remove file extensions if present
         banner_name = re.sub(r'\.(png|jpg|jpeg|gif|svg|webp)$', '', banner_name, flags=re.IGNORECASE)
-        # Clean special characters
-        clean_name = re.sub(r'[<>:"/\\|?*]', '_', banner_name)
+        
+        # Remove zero-width spaces and other invisible Unicode characters
+        clean_name = re.sub(r'[\u200b\u200c\u200d\ufeff]', '', banner_name)  # Remove zero-width chars
+        clean_name = re.sub(r'[^\x00-\x7F]', '', clean_name)  # Remove non-ASCII chars
+        
+        # Clean special characters and normalize
+        clean_name = re.sub(r'[<>:"/\\|?*]', '_', clean_name)
         clean_name = re.sub(r'\s+', '_', clean_name)
         clean_name = re.sub(r'_+', '_', clean_name)  # Remove multiple underscores
         clean_name = clean_name.strip('_')  # Remove leading/trailing underscores
@@ -1187,10 +1193,40 @@ def generate_banner_filename(banner_info, url, format='png', index=None):
     filename_base = re.sub(r'_+', '_', filename_base)  # Remove multiple underscores
     filename_base = filename_base.strip('_')  # Remove leading/trailing underscores
     
+    # Final Unicode cleanup to ensure no invisible characters remain
+    filename_base = re.sub(r'[\u200b\u200c\u200d\ufeff]', '', filename_base)  # Remove zero-width chars
+    filename_base = re.sub(r'[^\w\-_.]', '', filename_base)  # Keep only safe filename characters
+    filename_base = filename_base.strip('_.')  # Remove any trailing underscores or dots
+    
     result_filename = f'{filename_base}.{format}'
     logger.info(f"Generated filename: '{result_filename}' (name_source: {name_source})")
     
     return result_filename
+
+def clean_filename_for_zip(filename):
+    """Clean filename for ZIP archive consistency"""
+    if not filename:
+        return 'banner.png'
+    
+    # Remove zero-width spaces and other invisible Unicode characters
+    clean_name = re.sub(r'[\u200b\u200c\u200d\ufeff]', '', filename)  # Remove zero-width chars
+    clean_name = re.sub(r'[^\x00-\x7F]', '', clean_name)  # Remove non-ASCII chars
+    
+    # Clean special characters that might cause issues in ZIP files
+    clean_name = re.sub(r'[<>:"/\\|?*]', '_', clean_name)
+    clean_name = re.sub(r'\s+', '_', clean_name)
+    clean_name = re.sub(r'_+', '_', clean_name)  # Remove multiple underscores
+    clean_name = clean_name.strip('_.')  # Remove leading/trailing underscores and dots
+    
+    # Ensure we have a valid filename
+    if not clean_name or clean_name == '.':
+        return 'banner.png'
+    
+    # Ensure file extension exists
+    if '.' not in clean_name:
+        clean_name += '.png'
+    
+    return clean_name
 
 @app.route('/')
 def index():
@@ -2221,8 +2257,12 @@ def download_zip():
                 # Decode base64 image data
                 try:
                     image_bytes = base64.b64decode(image_data['data'].split(',')[1])
-                    filename = image_data['filename'] or f'banner_{i+1}.png'
-                    zip_file.writestr(filename, image_bytes)
+                    original_filename = image_data['filename'] or f'banner_{i+1}.png'
+                    
+                    # Clean filename for ZIP consistency
+                    cleaned_filename = clean_filename_for_zip(original_filename)
+                    
+                    zip_file.writestr(cleaned_filename, image_bytes)
                 except Exception as e:
                     logging.error(f"Failed to add image {i} to ZIP: {str(e)}")
                     continue

@@ -1,3 +1,32 @@
+// Debug mode flag - set to false for production
+// Can be enabled by adding ?debug=true to URL or pressing Ctrl+Shift+D
+let DEBUG_MODE = false;
+
+// Check for debug mode in URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('debug') === 'true') {
+    DEBUG_MODE = true;
+    document.body.classList.add('debug-mode');
+    console.log('🔍 Debug mode enabled via URL parameter');
+}
+
+// Debug-aware console logging
+const debugLog = (...args) => {
+    if (DEBUG_MODE) console.log(...args);
+};
+
+// Enable debug mode with Ctrl+Shift+D
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        DEBUG_MODE = !DEBUG_MODE;
+        document.body.classList.toggle('debug-mode', DEBUG_MODE);
+        console.log(`🔍 Debug mode ${DEBUG_MODE ? 'enabled' : 'disabled'}`);
+        if (DEBUG_MODE) {
+            console.log('Debug controls are now visible. Debug logging is active.');
+        }
+    }
+});
+
 class BannerToStaticUtility {
     constructor() {
         this.urls = [];
@@ -25,6 +54,9 @@ class BannerToStaticUtility {
         
         // Preview elements
         this.previewContainer = document.getElementById('preview-container');
+        this.viewGridBtn = document.getElementById('view-grid-btn');
+        this.viewActualBtn = document.getElementById('view-actual-btn');
+        this.bannerCountSpan = document.getElementById('banner-count');
         
         // Preview scanning elements
         this.previewUrlInput = document.getElementById('preview-url');
@@ -43,6 +75,9 @@ class BannerToStaticUtility {
         this.loadingText = document.getElementById('loading-text');
         this.progressFill = document.getElementById('progress-fill');
         this.progressText = document.getElementById('progress-text');
+        
+        // View state
+        this.currentView = 'grid'; // 'grid' or 'actual'
     }
 
     attachEventListeners() {
@@ -77,6 +112,10 @@ class BannerToStaticUtility {
         this.previewUrlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.scanPreviewPage();
         });
+        
+        // View toggle buttons
+        this.viewGridBtn.addEventListener('click', () => this.setView('grid'));
+        this.viewActualBtn.addEventListener('click', () => this.setView('actual'));
         
         this.addBulkUrlsBtn.addEventListener('click', () => this.addBulkUrls());
         
@@ -237,16 +276,16 @@ ${result.recommendedWidth} × ${result.recommendedHeight}px
     }
 
     async testConnection() {
-        console.log("🧪 Testing server connection...");
+        debugLog("🧪 Testing server connection...");
         try {
             const response = await fetch('/test', {
                 method: 'GET'
             });
-            console.log("📡 Test response:", response.status, response.statusText);
+            debugLog("📡 Test response:", response.status, response.statusText);
             
             if (response.ok) {
                 const data = await response.json();
-                console.log("✅ Test data:", data);
+                debugLog("✅ Test data:", data);
                 alert(`✅ Server connection works!\nStatus: ${data.status}\nMessage: ${data.message}`);
             } else {
                 console.error("❌ Test failed:", response.status);
@@ -350,7 +389,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
             this.showLoadingOverlay();
             this.loadingText.textContent = 'Checking Hoxton data extraction...';
             
-            console.log('🌐 Sending request to /check-hoxton-data...');
+            debugLog('🌐 Sending request to /check-hoxton-data...');
             
             const response = await fetch('/check-hoxton-data', {
                 method: 'POST',
@@ -360,7 +399,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
                 body: JSON.stringify({ url: url })
             });
             
-            console.log('📦 Response received:', response.status);
+            debugLog('📦 Response received:', response.status);
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -368,7 +407,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
             }
             
             const result = await response.json();
-            console.log('📊 Response data:', result);
+            debugLog('📊 Response data:', result);
             
             // Show simple success message
             this.showNotification(`✅ Check completed! Check terminal for detailed logs.`, 'success');
@@ -559,9 +598,16 @@ ${result.test_result.hoxtonElements.length === 0 ?
     async generateAllImages() {
         if (this.isProcessing || this.urls.length === 0) return;
         
+        debugLog('🚀 Starting generateAllImages with URLs:', this.urls.length);
+        debugLog('📋 URL list:', this.urls.map(u => u.url));
+        debugLog('🔒 Setting isProcessing to true');
+        
         this.isProcessing = true;
         this.currentProcessIndex = 0;
         this.showLoadingOverlay();
+        
+        // Initialize progress display
+        this.updateProgressParallel(0, this.urls.length);
         
         // Reset all statuses
         this.urls.forEach(item => {
@@ -577,9 +623,13 @@ ${result.test_result.hoxtonElements.length === 0 ?
             const maxConcurrency = this.getOptimalConcurrency();
             const processingBatches = this.createProcessingBatches(this.urls, maxConcurrency);
             
+            debugLog('📦 Created batches:', processingBatches.length, 'batches');
+            debugLog('📊 Batch details:', processingBatches.map(batch => ({ length: batch.length, urls: batch.map(u => u.url) })));
+            
             this.showNotification(`Processing ${this.urls.length} banners with ${maxConcurrency} parallel workers...`, 'info');
             
             let completedCount = 0;
+            debugLog('🔢 Initial completedCount:', completedCount);
             
             for (const batch of processingBatches) {
                 // Process batch in parallel
@@ -606,6 +656,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
                         }
                         
                         completedCount++;
+                        debugLog('✅ Completed URL:', urlItem.url, '- Count now:', completedCount, 'of', this.urls.length);
                         this.updateProgressParallel(completedCount, this.urls.length);
                         
                     } catch (error) {
@@ -614,6 +665,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
                         console.error('Screenshot capture failed for:', urlItem.url, error);
                         this.showNotification(`Error capturing ${this.truncateUrl(urlItem.url)}: ${error.message}`, 'warning');
                         completedCount++;
+                        debugLog('❌ Error for URL:', urlItem.url, '- Count now:', completedCount, 'of', this.urls.length);
                         this.updateProgressParallel(completedCount, this.urls.length);
                     }
                     
@@ -665,10 +717,10 @@ ${result.test_result.hoxtonElements.length === 0 ?
     }
 
     async captureScreenshot(urlItem) {
-        console.log("🚀 captureScreenshot called with:", urlItem);
+        debugLog("🚀 captureScreenshot called with:", urlItem);
         
         const settings = this.getSettings();
-        console.log("⚙️ Settings:", settings);
+        debugLog("⚙️ Settings:", settings);
         
         const requestData = {
             url: urlItem.url,
@@ -683,7 +735,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
             requestData.height = settings.height;
         }
         
-        console.log("📤 Sending request to /capture with data:", requestData);
+        debugLog("📤 Sending request to /capture with data:", requestData);
         
         try {
             const response = await fetch('/capture', {
@@ -694,7 +746,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
                 body: JSON.stringify(requestData)
             });
             
-            console.log("📥 Response received:", response.status, response.statusText);
+            debugLog("📥 Response received:", response.status, response.statusText);
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -703,7 +755,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
             }
             
             const result = await response.json();
-            console.log("✅ Response data:", result);
+            debugLog("✅ Response data:", result);
             return result;
         } catch (error) {
             console.error("💥 Fetch error:", error);
@@ -715,6 +767,15 @@ ${result.test_result.hoxtonElements.length === 0 ?
         this.urlCountSpan.textContent = this.urls.length;
         this.generateAllBtn.disabled = this.urls.length === 0 || this.isProcessing;
         this.clearAllBtn.disabled = this.urls.length === 0 || this.isProcessing;
+        
+        // Dynamic button text based on number of URLs
+        if (this.urls.length === 1) {
+            this.generateAllBtn.textContent = 'Generate Image';
+        } else if (this.urls.length > 1) {
+            this.generateAllBtn.textContent = `Generate All ${this.urls.length} Images`;
+        } else {
+            this.generateAllBtn.textContent = 'Generate Images'; // Default for 0 URLs
+        }
         
         this.updateUrlList();
         this.updatePreview();
@@ -756,11 +817,35 @@ ${result.test_result.hoxtonElements.length === 0 ?
     updatePreview() {
         const completedItems = this.urls.filter(item => item.status === 'completed' && item.imageData);
         
+        // Update banner count
+        if (this.bannerCountSpan) {
+            this.bannerCountSpan.textContent = `${completedItems.length} banner${completedItems.length !== 1 ? 's' : ''}`;
+        }
+        
         if (completedItems.length === 0) {
             this.previewContainer.innerHTML = '<div class="empty-state"><p>Generated images will appear here</p></div>';
             return;
         }
         
+        if (this.currentView === 'actual') {
+            this.renderActualSizeView(completedItems);
+        } else {
+            this.renderGridView(completedItems);
+        }
+    }
+    
+    setView(viewType) {
+        this.currentView = viewType;
+        
+        // Update toggle buttons
+        this.viewGridBtn.classList.toggle('active', viewType === 'grid');
+        this.viewActualBtn.classList.toggle('active', viewType === 'actual');
+        
+        // Re-render preview
+        this.updatePreview();
+    }
+    
+    renderGridView(completedItems) {
         this.previewContainer.innerHTML = `
             <div class="preview-grid">
                 ${completedItems.map(item => {
@@ -793,13 +878,73 @@ ${result.test_result.hoxtonElements.length === 0 ?
                             </div>
                             <div class="preview-actions">
                                 <a href="data:${mimeType};base64,${item.imageData}" 
-                                   download="${item.filename}" class="download-btn">
+                                   download="${this.cleanFilename(item.filename)}" class="download-btn">
                                     Download
                                 </a>
                             </div>
                         </div>
                     </div>
                 `}).join('')}
+            </div>
+            <div class="actions mt-20">
+                <button class="primary" onclick="utility.downloadAll()">Download All Images</button>
+                <button class="secondary" onclick="utility.downloadAsZip()">Download as ZIP</button>
+            </div>
+        `;
+    }
+    
+    renderActualSizeView(completedItems) {
+        this.previewContainer.innerHTML = `
+            <div class="preview-gallery">
+                <div class="gallery-container">
+                    ${completedItems.map(item => {
+                        const format = item.format || 'png';
+                        const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                        const dimensions = item.dimensions || {};
+                        const actualWidth = dimensions.width || 300;
+                        const actualHeight = dimensions.height || 250;
+                        
+                        return `
+                        <div class="banner-canvas" style="width: ${actualWidth}px;">
+                            <div class="canvas-header">
+                                ${item.bannerInfo ? item.bannerInfo.title || 'Banner' : this.truncateUrl(item.url, 25)}
+                            </div>
+                            <img src="data:${mimeType};base64,${item.imageData}" 
+                                 alt="Banner Screenshot" 
+                                 class="canvas-image"
+                                 style="width: ${actualWidth}px; height: ${actualHeight}px;" />
+                            <div class="canvas-footer">
+                                <div class="banner-metadata">
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Size</div>
+                                        <div class="metadata-value">${actualWidth}×${actualHeight}</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">Format</div>
+                                        <div class="metadata-value">${format.toUpperCase()}</div>
+                                    </div>
+                                    <div class="metadata-item">
+                                        <div class="metadata-label">File Size</div>
+                                        <div class="metadata-value">${item.fileSizeKB || 'N/A'}KB</div>
+                                    </div>
+                                </div>
+                                ${item.optimization ? `
+                                    <div style="margin-top: 8px; font-size: 10px; color: ${item.fileSizeKB <= 50 ? '#28a745' : '#dc3545'};">
+                                        ${item.fileSizeKB <= 50 ? '✅ Optimized' : '⚠️ Over 50KB'} 
+                                        (Quality: ${item.optimization.final_quality}%)
+                                    </div>
+                                ` : ''}
+                                <div style="margin-top: 8px;">
+                                    <a href="data:${mimeType};base64,${item.imageData}" 
+                                       download="${this.cleanFilename(item.filename)}" 
+                                       style="font-size: 11px; color: var(--primary-color); text-decoration: none;">
+                                        📥 Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `}).join('')}
+                </div>
             </div>
             <div class="actions mt-20">
                 <button class="primary" onclick="utility.downloadAll()">Download All Images</button>
@@ -821,9 +966,12 @@ ${result.test_result.hoxtonElements.length === 0 ?
                 const format = item.format || 'png';
                 const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
                 
+                // Clean filename for consistency
+                const cleanFilename = this.cleanFilename(item.filename || `banner_${index + 1}.${format}`);
+                
                 const link = document.createElement('a');
                 link.href = `data:${mimeType};base64,${item.imageData}`;
-                link.download = item.filename;
+                link.download = cleanFilename;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -831,6 +979,32 @@ ${result.test_result.hoxtonElements.length === 0 ?
         });
         
         this.showNotification(`Downloading ${completedItems.length} images...`, 'success');
+    }
+    
+    cleanFilename(filename) {
+        if (!filename) return 'banner.png';
+        
+        // Remove zero-width spaces and other invisible Unicode characters
+        let clean = filename.replace(/[\u200B\u200C\u200D\uFEFF]/g, ''); // Remove zero-width chars
+        clean = clean.replace(/[^\x00-\x7F]/g, ''); // Remove non-ASCII chars
+        
+        // Clean special characters
+        clean = clean.replace(/[<>:"/\\|?*]/g, '_');
+        clean = clean.replace(/\s+/g, '_');
+        clean = clean.replace(/_+/g, '_'); // Remove multiple underscores
+        clean = clean.replace(/^[_.]|[_.]$/g, ''); // Remove leading/trailing underscores and dots
+        
+        // Ensure we have a valid filename
+        if (!clean || clean === '.') {
+            return 'banner.png';
+        }
+        
+        // Ensure file extension exists
+        if (!clean.includes('.')) {
+            clean += '.png';
+        }
+        
+        return clean;
     }
 
     async downloadAsZip() {
@@ -853,7 +1027,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
             // Prepare images for ZIP
             const images = completedItems.map(item => ({
                 data: `data:${item.format === 'png' ? 'image/png' : 'image/jpeg'};base64,${item.imageData}`,
-                filename: item.filename
+                filename: this.cleanFilename(item.filename || `banner_${Math.random().toString(36).substr(2, 9)}.${item.format || 'png'}`)
             }));
 
             // Send to backend for ZIP creation
@@ -910,6 +1084,7 @@ ${result.test_result.hoxtonElements.length === 0 ?
     }
 
     updateProgressParallel(completed, total) {
+        debugLog(`📊 Progress update: ${completed}/${total}`);
         const progress = (completed / total) * 100;
         this.progressFill.style.width = `${progress}%`;
         this.progressText.textContent = `${completed} / ${total} completed`;
@@ -937,9 +1112,13 @@ ${result.test_result.hoxtonElements.length === 0 ?
 
     createProcessingBatches(items, batchSize) {
         const batches = [];
+        debugLog('🧮 Creating batches for', items.length, 'items with batchSize:', batchSize);
         for (let i = 0; i < items.length; i += batchSize) {
-            batches.push(items.slice(i, i + batchSize));
+            const batch = items.slice(i, i + batchSize);
+            debugLog('📦 Created batch', batches.length + 1, 'with', batch.length, 'items:', batch.map(item => item.url || item));
+            batches.push(batch);
         }
+        debugLog('🎯 Total batches created:', batches.length);
         return batches;
     }
 

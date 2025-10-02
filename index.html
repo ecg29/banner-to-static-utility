@@ -38,9 +38,10 @@
                     <label for="banner-url">Banner URL or Local File Path:</label>
                     <input type="text" id="banner-url" placeholder="https://example.com/banner.html or C:\path\to\banner\index.html" />
                     <button id="add-url-btn">Add URL</button>
-                    <button id="debug-dimensions-btn" class="secondary">Debug Dimensions</button>
-                    <button id="test-hoxton-btn" class="secondary">Test Hoxton</button>
-                    <button id="check-hoxton-data-btn" class="secondary">Check Hoxton Data</button>
+                    <!-- Debug buttons - hidden from production UI but functionality preserved -->
+                    <button id="debug-dimensions-btn" class="secondary debug-hidden">Debug Dimensions</button>
+                    <button id="test-hoxton-btn" class="secondary debug-hidden">Test Hoxton</button>
+                    <button id="check-hoxton-data-btn" class="secondary debug-hidden">Check Hoxton Data</button>
                 </div>
                 
                 <div class="bulk-input-group">
@@ -62,7 +63,14 @@ file:///C:/path/to/banner3.html"></textarea>
             </section>
 
             <section class="preview-section">
-                <h3>Preview & Results</h3>
+                <div class="preview-header">
+                    <h3>Preview & Results</h3>
+                    <div class="preview-controls">
+                        <button id="view-grid-btn" class="view-toggle active">Grid View</button>
+                        <button id="view-actual-btn" class="view-toggle">Actual Size</button>
+                        <span class="banner-count" id="banner-count">0 banners</span>
+                    </div>
+                </div>
                 <div id="preview-container" class="preview-container">
                     <div class="empty-state">
                         <p>Add banner URLs above to start generating static images</p>
