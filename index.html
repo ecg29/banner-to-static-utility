@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner to Static Image Utility</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ Banner to Static Image Utility</h1>
+            <p>Generate backup static images from banner URLs with one click</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="info-box">
+                    <h4>📁 Supported Input Types:</h4>
+                    <ul>
+                        <li><strong>Web URLs:</strong> https://example.com/banner.html</li>
+                        <li><strong>Local Files:</strong> C:\Users\ADMIN\Desktop\banner\index.html</li>
+                        <li><strong>File URLs:</strong> file:///C:/path/to/banner.html</li>
+                        <li><strong>Preview Pages:</strong> Pages containing multiple banners (use "Scan Preview" button)</li>
+                    </ul>
+                </div>
+                
+                <div class="preview-scan-section">
+                    <h4>🔍 Scan Preview Page for Multiple Banners</h4>
+                    <div class="preview-scan-group">
+                        <label for="preview-url">Preview Page URL:</label>
+                        <input type="text" id="preview-url" placeholder="https://preview.example.com/all-banners" />
+                        <button id="scan-preview-btn" class="primary">Scan Preview</button>
+                    </div>
+                </div>
+                
+                <div class="url-input-group">
+                    <label for="banner-url">Banner URL or Local File Path:</label>
+                    <input type="text" id="banner-url" placeholder="https://example.com/banner.html or C:\path\to\banner\index.html" />
+                    <button id="add-url-btn">Add URL</button>
+                    <button id="debug-dimensions-btn" class="secondary">Debug Dimensions</button>
+                    <button id="test-hoxton-btn" class="secondary">Test Hoxton</button>
+                    <button id="check-hoxton-data-btn" class="secondary">Check Hoxton Data</button>
+                </div>
+                
+                <div class="bulk-input-group">
+                    <label for="bulk-urls">Or paste multiple URLs/paths (one per line):</label>
+                    <textarea id="bulk-urls" rows="5" placeholder="https://example.com/banner1.html
+C:\Users\ADMIN\Desktop\banner2\index.html
+file:///C:/path/to/banner3.html"></textarea>
+                    <button id="add-bulk-urls-btn">Add All URLs</button>
+                </div>
+            </section>
+
+            <section class="url-list-section">
+                <h3>URLs to Process (<span id="url-count">0</span>)</h3>
+                <div id="url-list" class="url-list"></div>
+                <div class="actions">
+                    <button id="clear-all-btn" class="secondary">Clear All</button>
+                    <button id="generate-all-btn" class="primary" disabled>Generate All Images</button>
+                </div>
+            </section>
+
+            <section class="preview-section">
+                <h3>Preview & Results</h3>
+                <div id="preview-container" class="preview-container">
+                    <div class="empty-state">
+                        <p>Add banner URLs above to start generating static images</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h3>Settings</h3>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="auto-detect-size" checked>
+                            Auto-detect banner dimensions
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="image-width">Custom Width (px):</label>
+                        <input type="number" id="image-width" value="160" min="100" max="3000" disabled>
+                    </div>
+                    <div class="setting-item">
+                        <label for="image-height">Custom Height (px):</label>
+                        <input type="number" id="image-height" value="600" min="100" max="3000" disabled>
+                    </div>
+                    <div class="setting-item">
+                        <label for="image-format">Image Format:</label>
+                        <select id="image-format">
+                            <option value="png">PNG (Best Quality)</option>
+                            <option value="jpg">JPG (Smaller Size)</option>
+                            <option value="webp">WebP (Modern)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="wait-time">Animation Wait Time (seconds):</label>
+                        <input type="number" id="wait-time" value="5" min="1" max="30">
+                        <small>Time to wait for animations to complete</small>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p id="loading-text">Generating images...</p>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <p id="progress-text">0 / 0 completed</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "banner-to-static-utility",
+  "version": "1.0.0",
+  "description": "A web-based utility to generate backup static images from banner URLs",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "install-deps": "pip install -r requirements.txt && playwright install chromium"
+  },
+  "keywords": [
+    "banner",
+    "screenshot",
+    "static-image",
+    "web-utility",
+    "playwright",
+    "flask"
+  ],
+  "author": "Banner Utility Developer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/banner-to-static-utility.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/banner-to-static-utility/issues"
+  },
+  "homepage": "https://github.com/your-username/banner-to-static-utility#readme"
+}
