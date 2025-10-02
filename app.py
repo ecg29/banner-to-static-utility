@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 import json
 import zipfile
 import io
+from PIL import Image
+import io as image_io
 
 # Import Playwright for web scraping and screenshot capture
 try:
@@ -46,12 +48,169 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class ScreenshotService:
-    def __init__(self):
-        self.playwright = None
+def optimize_image_to_jpg(image_data, max_size_kb=50, min_quality=30, max_quality=95):
+    """
+    Convert image data to JPG format and optimize to stay under size limit
+    
+    Args:
+        image_data: Raw image data (bytes)
+        max_size_kb: Maximum file size in KB (default: 50)
+        min_quality: Minimum JPG quality to try (default: 30)
+        max_quality: Maximum JPG quality to start with (default: 95)
+    
+    Returns:
+        tuple: (optimized_jpg_data, final_quality, final_size_kb)
+    """
+    try:
+        # Convert image data to PIL Image
+        image = Image.open(image_io.BytesIO(image_data))
+        
+        # Convert to RGB if necessary (for JPG compatibility)
+        if image.mode in ('RGBA', 'LA', 'P'):
+            # Create white background for transparency
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode == 'P':
+                image = image.convert('RGBA')
+            background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+            image = background
+        
+        # Try different quality levels to find optimal size
+        max_size_bytes = max_size_kb * 1024
+        best_quality = max_quality
+        best_data = None
+        
+        for quality in range(max_quality, min_quality - 1, -5):
+            output = image_io.BytesIO()
+            image.save(output, format='JPEG', quality=quality, optimize=True)
+            jpg_data = output.getvalue()
+            
+            if len(jpg_data) <= max_size_bytes:
+                best_quality = quality
+                best_data = jpg_data
+                break
+        
+        # If still too large, try with minimum quality
+        if best_data is None:
+            output = image_io.BytesIO()
+            image.save(output, format='JPEG', quality=min_quality, optimize=True)
+            best_data = output.getvalue()
+            best_quality = min_quality
+        
+        final_size_kb = len(best_data) / 1024
+        
+        log_to_file(f"Image optimized: Quality {best_quality}%, Size: {final_size_kb:.1f}KB")
+        
+        return best_data, best_quality, final_size_kb
+        
+    except Exception as e:
+        log_to_file(f"Error optimizing image: {str(e)}")
+        raise Exception(f"Failed to optimize image: {str(e)}")
+
+class BrowserPool:
+    """Manages a pool of browser instances for better performance"""
+    def __init__(self, pool_size=3):
+        self.pool_size = pool_size
+        self.available_browsers = []
+        self.in_use_browsers = []
+        self.playwright_instances = []
         
     def get_browser_context(self):
-        """Get a fresh browser context for each request to avoid threading issues"""
+        """Get or create a browser context from the pool"""
+        if not PLAYWRIGHT_AVAILABLE:
+            raise Exception("Playwright is not installed. Please install it with: pip install playwright")
+        
+        # Try to reuse an existing browser
+        if self.available_browsers:
+            browser_info = self.available_browsers.pop()
+            self.in_use_browsers.append(browser_info)
+            
+            # Create new context on existing browser
+            context = browser_info['browser'].new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+            )
+            
+            return browser_info['playwright'], browser_info['browser'], context
+        
+        # Create new browser if pool not full
+        if len(self.in_use_browsers) < self.pool_size:
+            playwright = sync_playwright().start()
+            browser = playwright.chromium.launch(
+                headless=True,
+                args=[
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-extensions',
+                    '--disable-background-timer-throttling',
+                    '--disable-renderer-backgrounding',
+                    '--disable-backgrounding-occluded-windows',
+                    '--disable-features=TranslateUI',
+                    '--disable-ipc-flooding-protection',
+                    '--disable-web-security',  # Faster loading
+                    '--disable-features=VizDisplayCompositor'  # Reduce overhead
+                ]
+            )
+            
+            browser_info = {'playwright': playwright, 'browser': browser}
+            self.in_use_browsers.append(browser_info)
+            
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+            )
+            
+            return playwright, browser, context
+        
+        # If pool is full, create temporary browser (fallback)
+        return self._create_temporary_browser()
+    
+    def return_browser(self, playwright, browser):
+        """Return a browser to the pool for reuse"""
+        browser_info = {'playwright': playwright, 'browser': browser}
+        
+        if browser_info in self.in_use_browsers:
+            self.in_use_browsers.remove(browser_info)
+            self.available_browsers.append(browser_info)
+    
+    def _create_temporary_browser(self):
+        """Create a temporary browser (not pooled)"""
+        playwright = sync_playwright().start()
+        browser = playwright.chromium.launch(headless=True)
+        context = browser.new_context(
+            viewport={'width': 1920, 'height': 1080},
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+        )
+        return playwright, browser, context
+    
+    def cleanup(self):
+        """Clean up all browsers in the pool"""
+        for browser_info in self.available_browsers + self.in_use_browsers:
+            try:
+                browser_info['browser'].close()
+                browser_info['playwright'].stop()
+            except:
+                pass
+        self.available_browsers.clear()
+        self.in_use_browsers.clear()
+
+# Global browser pool instance
+browser_pool = BrowserPool(pool_size=4)
+
+class ScreenshotService:
+    def __init__(self):
+        self.use_pool = True  # Enable browser pooling for better performance
+        
+    def get_browser_context(self):
+        """Get a browser context (using pool if enabled)"""
+        if self.use_pool:
+            return browser_pool.get_browser_context()
+        else:
+            # Fallback to old method
+            return self._create_fresh_browser_context()
+    
+    def _create_fresh_browser_context(self):
+        """Create a fresh browser context (legacy method)"""
         if not PLAYWRIGHT_AVAILABLE:
             raise Exception("Playwright is not installed. Please install it with: pip install playwright")
             
@@ -789,14 +948,36 @@ class ScreenshotService:
             screenshot_format = 'png' if format.lower() in ['png'] else 'jpeg'
             
             screenshot_bytes = page.screenshot(
-                type=screenshot_format,
+                type='png',  # Always capture as PNG first for quality
                 full_page=False,  # Only capture viewport
-                quality=95 if screenshot_format == 'jpeg' else None,
                 clip={'x': 0, 'y': 0, 'width': width, 'height': height}
             )
             
+            # Always convert to JPG with size optimization for compliance
+            try:
+                optimized_jpg_data, final_quality, final_size_kb = optimize_image_to_jpg(screenshot_bytes)
+                screenshot_base64 = base64.b64encode(optimized_jpg_data).decode('utf-8')
+                actual_format = 'jpeg'
+                
+                logger.info(f"📷 Image optimized: {final_size_kb:.1f}KB at {final_quality}% quality")
+                
+                # Add optimization info to banner_info for reporting
+                banner_info['optimization'] = {
+                    'original_format': 'png',
+                    'final_format': 'jpeg',
+                    'final_quality': final_quality,
+                    'final_size_kb': round(final_size_kb, 1),
+                    'size_limit_kb': 50
+                }
+                
+            except Exception as e:
+                logger.error(f"Failed to optimize image: {str(e)}")
+                # Fallback to original PNG if optimization fails
+                screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+                actual_format = 'png'
+            
             # Convert to base64
-            screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
+            # screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
             
             # Debug: Log final banner_info before returning
             logger.info(f"🔍 Final banner_info before return:")
@@ -808,7 +989,7 @@ class ScreenshotService:
             return {
                 'success': True,
                 'imageData': screenshot_base64,
-                'format': screenshot_format,
+                'format': actual_format,
                 'dimensions': {'width': width, 'height': height},
                 'detectedDimensions': banner_info,
                 'url': url
@@ -1582,7 +1763,11 @@ def capture_screenshot():
             banner_info = result.get('detectedDimensions', {})
             logger.info(f"🏷️ About to generate filename with banner_info keys: {banner_info.keys() if banner_info else 'None'}")
             
-            filename = data.get('filename') or generate_banner_filename(banner_info, url, format)
+            # Use the actual format returned (should be 'jpeg' after optimization)
+            actual_format = result.get('format', 'jpeg')
+            file_extension = 'jpg' if actual_format == 'jpeg' else actual_format
+            
+            filename = data.get('filename') or generate_banner_filename(banner_info, url, file_extension)
             result['filename'] = filename
             
             logger.info(f"✅ Final result filename: {filename}")

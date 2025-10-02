@@ -36,6 +36,7 @@ class BannerToStaticUtility {
         this.imageHeightInput = document.getElementById('image-height');
         this.imageFormatSelect = document.getElementById('image-format');
         this.waitTimeInput = document.getElementById('wait-time');
+        this.fastModeCheckbox = document.getElementById('fast-mode');
         
         // Loading elements
         this.loadingOverlay = document.getElementById('loading-overlay');
@@ -572,42 +573,73 @@ ${result.test_result.hoxtonElements.length === 0 ?
         this.updateUI();
         
         try {
-            for (let i = 0; i < this.urls.length; i++) {
-                const urlItem = this.urls[i];
-                this.currentProcessIndex = i;
-                
-                this.updateProgress();
-                this.loadingText.textContent = `Processing: ${this.truncateUrl(urlItem.url)}`;
-                
-                urlItem.status = 'processing';
-                this.updateUrlItem(urlItem);
-                
-                try {
-                    const result = await this.captureScreenshot(urlItem);
-                    urlItem.status = 'completed';
-                    urlItem.imageData = result.imageData;
-                    urlItem.format = result.format;
-                    urlItem.dimensions = result.dimensions;
-                    urlItem.detectedDimensions = result.detectedDimensions;
-                    urlItem.filename = result.filename;
-                } catch (error) {
-                    urlItem.status = 'error';
-                    urlItem.error = error.message;
-                    console.error('Screenshot capture failed for:', urlItem.url, error);
+            // Parallel processing with configurable concurrency
+            const maxConcurrency = this.getOptimalConcurrency();
+            const processingBatches = this.createProcessingBatches(this.urls, maxConcurrency);
+            
+            this.showNotification(`Processing ${this.urls.length} banners with ${maxConcurrency} parallel workers...`, 'info');
+            
+            let completedCount = 0;
+            
+            for (const batch of processingBatches) {
+                // Process batch in parallel
+                const batchPromises = batch.map(async (urlItem, batchIndex) => {
+                    try {
+                        urlItem.status = 'processing';
+                        this.updateUrlItem(urlItem);
+                        
+                        const result = await this.captureScreenshot(urlItem);
+                        urlItem.status = 'completed';
+                        urlItem.imageData = result.imageData;
+                        urlItem.format = result.format;
+                        urlItem.dimensions = result.dimensions;
+                        urlItem.detectedDimensions = result.detectedDimensions;
+                        urlItem.filename = result.filename;
+                        
+                        // Calculate and store file size information
+                        const imageSizeBytes = result.imageData ? atob(result.imageData).length : 0;
+                        urlItem.fileSizeKB = Math.round(imageSizeBytes / 1024 * 10) / 10;
+                        
+                        // Store optimization info if available
+                        if (result.detectedDimensions && result.detectedDimensions.optimization) {
+                            urlItem.optimization = result.detectedDimensions.optimization;
+                        }
+                        
+                        completedCount++;
+                        this.updateProgressParallel(completedCount, this.urls.length);
+                        
+                    } catch (error) {
+                        urlItem.status = 'error';
+                        urlItem.error = error.message;
+                        console.error('Screenshot capture failed for:', urlItem.url, error);
+                        this.showNotification(`Error capturing ${this.truncateUrl(urlItem.url)}: ${error.message}`, 'warning');
+                        completedCount++;
+                        this.updateProgressParallel(completedCount, this.urls.length);
+                    }
                     
-                    // Continue with other URLs even if one fails
-                    this.showNotification(`Error capturing ${this.truncateUrl(urlItem.url)}: ${error.message}`, 'warning');
+                    this.updateUrlItem(urlItem);
+                });
+                
+                // Wait for current batch to complete before starting next batch
+                await Promise.all(batchPromises);
+                
+                // Small delay between batches to prevent overwhelming the server
+                if (processingBatches.indexOf(batch) < processingBatches.length - 1) {
+                    await this.sleep(200);
                 }
-                
-                this.updateUrlItem(urlItem);
-                
-                // Small delay between requests
-                await this.sleep(500);
             }
             
             this.hideLoadingOverlay();
             this.updatePreview();
-            this.showNotification('All images generated successfully!', 'success');
+            
+            const successCount = this.urls.filter(item => item.status === 'completed').length;
+            const errorCount = this.urls.filter(item => item.status === 'error').length;
+            
+            if (errorCount === 0) {
+                this.showNotification(`All ${successCount} images generated successfully!`, 'success');
+            } else {
+                this.showNotification(`Generated ${successCount} images (${errorCount} failed)`, 'warning');
+            }
             
         } catch (error) {
             this.hideLoadingOverlay();
@@ -746,7 +778,18 @@ ${result.test_result.hoxtonElements.length === 0 ?
                                 <small>
                                     📐 ${dimensions.width || 'auto'}×${dimensions.height || 'auto'}px 
                                     📄 ${format.toUpperCase()}
+                                    ${item.fileSizeKB ? `📊 ${item.fileSizeKB}KB` : ''}
+                                    ${item.optimization && item.fileSizeKB <= 50 ? '✅ Optimized' : ''}
+                                    ${item.optimization && item.fileSizeKB > 50 ? '⚠️ Over 50KB' : ''}
                                 </small>
+                                ${item.optimization ? `
+                                    <div class="optimization-info">
+                                        <small style="color: #666;">
+                                            Quality: ${item.optimization.final_quality}% 
+                                            (${item.optimization.final_size_kb}KB of 50KB limit)
+                                        </small>
+                                    </div>
+                                ` : ''}
                             </div>
                             <div class="preview-actions">
                                 <a href="data:${mimeType};base64,${item.imageData}" 
@@ -860,64 +903,44 @@ ${result.test_result.hoxtonElements.length === 0 ?
         }
     }
 
-    async downloadAsZip() {
-        const completedItems = this.urls.filter(item => item.status === 'completed' && item.imageData);
-        
-        if (completedItems.length === 0) {
-            this.showNotification('No images to download', 'warning');
-            return;
-        }
-
-        try {
-            // Prepare images data for ZIP
-            const images = completedItems.map(item => ({
-                data: `data:image/${item.format || 'png'};base64,${item.imageData}`,
-                filename: item.filename
-            }));
-
-            const response = await fetch('/download-zip', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ images })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            // Get the ZIP file as blob
-            const blob = await response.blob();
-            
-            // Create download link
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            
-            // Generate filename with timestamp
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            link.download = `banners_${timestamp}.zip`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Clean up
-            window.URL.revokeObjectURL(url);
-            
-            this.showNotification(`ZIP file with ${completedItems.length} images downloaded!`, 'success');
-            
-        } catch (error) {
-            console.error('ZIP download error:', error);
-            this.showNotification('Failed to download ZIP file', 'error');
-        }
-    }
-
     updateProgress() {
         const progress = ((this.currentProcessIndex + 1) / this.urls.length) * 100;
         this.progressFill.style.width = `${progress}%`;
         this.progressText.textContent = `${this.currentProcessIndex + 1} / ${this.urls.length} completed`;
+    }
+
+    updateProgressParallel(completed, total) {
+        const progress = (completed / total) * 100;
+        this.progressFill.style.width = `${progress}%`;
+        this.progressText.textContent = `${completed} / ${total} completed`;
+        this.loadingText.textContent = `Processing ${total - completed} remaining...`;
+    }
+
+    getOptimalConcurrency() {
+        // Determine optimal number of parallel workers based on banner count and fast mode
+        const bannerCount = this.urls.length;
+        const fastMode = this.fastModeCheckbox && this.fastModeCheckbox.checked;
+        
+        let baseConcurrency;
+        if (bannerCount <= 3) baseConcurrency = 2;      // Small batches: 2 parallel
+        else if (bannerCount <= 8) baseConcurrency = 3;  // Medium batches: 3 parallel  
+        else if (bannerCount <= 15) baseConcurrency = 4; // Large batches: 4 parallel
+        else baseConcurrency = 5;                        // Very large batches: 5 parallel max
+        
+        // Increase concurrency in fast mode
+        if (fastMode) {
+            return Math.min(baseConcurrency + 2, 8); // Max 8 parallel in fast mode
+        }
+        
+        return baseConcurrency;
+    }
+
+    createProcessingBatches(items, batchSize) {
+        const batches = [];
+        for (let i = 0; i < items.length; i += batchSize) {
+            batches.push(items.slice(i, i + batchSize));
+        }
+        return batches;
     }
 
     showLoadingOverlay() {
@@ -929,12 +952,21 @@ ${result.test_result.hoxtonElements.length === 0 ?
     }
 
     getSettings() {
+        const fastMode = this.fastModeCheckbox && this.fastModeCheckbox.checked;
+        let waitTime = parseFloat(this.waitTimeInput.value) || 2;
+        
+        // Optimize wait time in fast mode
+        if (fastMode && waitTime > 3) {
+            waitTime = Math.max(1, waitTime * 0.6); // Reduce wait time by 40% in fast mode
+        }
+        
         return {
             autoDetect: this.autoDetectSizeCheckbox.checked,
             width: parseInt(this.imageWidthInput.value) || 160,
             height: parseInt(this.imageHeightInput.value) || 600,
-            format: this.imageFormatSelect.value || 'png',
-            waitTime: parseInt(this.waitTimeInput.value) || 5
+            format: this.imageFormatSelect.value || 'jpg',
+            waitTime: waitTime,
+            fastMode: fastMode
         };
     }
 

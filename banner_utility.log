@@ -463,3 +463,443 @@
 2025-10-03 03:11:00,243 - INFO -   - hoxton_data extracted: {}
 2025-10-03 03:11:00,260 - INFO - 127.0.0.1 - - [03/Oct/2025 03:11:00] "POST /capture HTTP/1.1" 200 -
 2025-10-03 03:11:17,764 - INFO - 127.0.0.1 - - [03/Oct/2025 03:11:17] "POST /download-zip HTTP/1.1" 200 -
+2025-10-03 03:27:17,105 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.2:5000
+2025-10-03 03:27:17,106 - INFO - [33mPress CTRL+C to quit[0m
+2025-10-03 03:27:17,107 - INFO -  * Restarting with stat
+2025-10-03 03:27:17,624 - WARNING -  * Debugger is active!
+2025-10-03 03:27:17,628 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:27:29,776 - INFO - 127.0.0.1 - - [03/Oct/2025 03:27:29] "GET /?id=0b2a3295-f796-452d-bacc-6c90d48a9ced&vscodeBrowserReqId=1759433249353 HTTP/1.1" 200 -
+2025-10-03 03:27:29,926 - INFO - 127.0.0.1 - - [03/Oct/2025 03:27:29] "[36mGET /styles.css HTTP/1.1[0m" 304 -
+2025-10-03 03:27:30,121 - INFO - 127.0.0.1 - - [03/Oct/2025 03:27:30] "GET /script.js HTTP/1.1" 200 -
+2025-10-03 03:28:17,550 - INFO -  * Detected change in 'C:\\Users\\ADMIN\\Documents\\banner-to-static-utility\\app.py', reloading
+2025-10-03 03:28:17,592 - INFO -  * Restarting with stat
+2025-10-03 03:28:18,209 - WARNING -  * Debugger is active!
+2025-10-03 03:28:18,213 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:28:19,691 - INFO - 127.0.0.1 - - [03/Oct/2025 03:28:19] "GET / HTTP/1.1" 200 -
+2025-10-03 03:28:19,708 - INFO - 127.0.0.1 - - [03/Oct/2025 03:28:19] "[36mGET /styles.css HTTP/1.1[0m" 304 -
+2025-10-03 03:28:19,735 - INFO - 127.0.0.1 - - [03/Oct/2025 03:28:19] "GET /script.js HTTP/1.1" 200 -
+2025-10-03 03:28:35,213 - INFO - Navigating to: https://www.hoxton.co/share/5iBIyL7EsB
+2025-10-03 03:28:45,649 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:28:45,651 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="160" height="600" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e53-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e53%2Feaf1ec4043121dedcc202b4d602202d2-qlhK8AKLAB.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:28:45,659 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:28:45,662 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:28:45,663 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:28:45,663 - INFO -   - Has data: True
+2025-10-03 03:28:45,663 - INFO -   - Data length: 5835
+2025-10-03 03:28:45,663 - INFO -   - Parsed name: None
+2025-10-03 03:28:45,663 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:28:45,673 - INFO - Iframe URLs detected: []
+2025-10-03 03:28:45,677 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:28:45,678 - INFO - Detected dimensions: 160x600
+2025-10-03 03:28:45,678 - INFO - Viewport: 1920x1080
+2025-10-03 03:28:45,678 - INFO - Body: 1920x1080
+2025-10-03 03:28:45,692 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:28:45,692 - INFO -   - Found 1 iframes to check
+2025-10-03 03:28:45,692 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e53-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e53%2Feaf1ec4043121dedcc202b4d602202d2-qlhK8AKLAB.json
+2025-10-03 03:28:45,693 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:28:45,693 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:28:45,693 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5835
+2025-10-03 03:28:45,693 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_160x600%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:28:45,704 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:28:45,705 - INFO - Final dimensions to use: 160x600
+2025-10-03 03:28:47,712 - INFO - Waiting for animations to complete...
+2025-10-03 03:28:53,744 - INFO - Taking screenshot with dimensions: 160x600, format: jpg
+2025-10-03 03:28:53,846 - INFO -   - hoxtonData present: False
+2025-10-03 03:28:53,846 - INFO -   - width: 160
+2025-10-03 03:28:53,846 - INFO -   - height: 600
+2025-10-03 03:28:53,933 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:28:53,937 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:28:53,937 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:28:53,958 - INFO - 127.0.0.1 - - [03/Oct/2025 03:28:53] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:28:55,160 - INFO - Navigating to: https://www.hoxton.co/share/Y5DE6tw5aA
+2025-10-03 03:29:01,830 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:29:01,833 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="300" height="250" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e54-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e54%2F3f2c57ced099bbee10b2f94cd37d1208-srtWLKslcH.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:29:01,840 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:29:01,845 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:29:01,845 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:29:01,845 - INFO -   - Has data: True
+2025-10-03 03:29:01,845 - INFO -   - Data length: 5809
+2025-10-03 03:29:01,845 - INFO -   - Parsed name: None
+2025-10-03 03:29:01,846 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:29:01,855 - INFO - Iframe URLs detected: []
+2025-10-03 03:29:01,860 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:29:01,860 - INFO - Detected dimensions: 300x250
+2025-10-03 03:29:01,860 - INFO - Viewport: 1920x1080
+2025-10-03 03:29:01,860 - INFO - Body: 1920x1080
+2025-10-03 03:29:01,871 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:29:01,871 - INFO -   - Found 1 iframes to check
+2025-10-03 03:29:01,871 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e54-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e54%2F3f2c57ced099bbee10b2f94cd37d1208-srtWLKslcH.json
+2025-10-03 03:29:01,871 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:29:01,872 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:29:01,872 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5809
+2025-10-03 03:29:01,872 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_300x250%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:29:01,876 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:29:01,877 - INFO - Final dimensions to use: 300x250
+2025-10-03 03:29:03,882 - INFO - Waiting for animations to complete...
+2025-10-03 03:29:09,916 - INFO - Taking screenshot with dimensions: 300x250, format: jpg
+2025-10-03 03:29:09,972 - INFO -   - hoxtonData present: False
+2025-10-03 03:29:09,972 - INFO -   - width: 300
+2025-10-03 03:29:09,972 - INFO -   - height: 250
+2025-10-03 03:29:10,059 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:29:10,062 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:29:10,062 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:29:10,075 - INFO - 127.0.0.1 - - [03/Oct/2025 03:29:10] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:29:11,630 - INFO - Navigating to: https://www.hoxton.co/share/MY09qDu0Y8
+2025-10-03 03:29:19,053 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:29:19,056 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="300" height="600" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d43ba43c047738466-1759412046/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d43ba43c047738466%2F971d58b9c2ebf82cca074c507849ecef-sPWDXYRSQY.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:29:19,062 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:29:19,066 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:29:19,067 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:29:19,067 - INFO -   - Has data: True
+2025-10-03 03:29:19,067 - INFO -   - Data length: 5829
+2025-10-03 03:29:19,068 - INFO -   - Parsed name: None
+2025-10-03 03:29:19,068 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:29:19,076 - INFO - Iframe URLs detected: []
+2025-10-03 03:29:19,080 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:29:19,080 - INFO - Detected dimensions: 300x600
+2025-10-03 03:29:19,080 - INFO - Viewport: 1920x1080
+2025-10-03 03:29:19,081 - INFO - Body: 1920x1080
+2025-10-03 03:29:19,091 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:29:19,091 - INFO -   - Found 1 iframes to check
+2025-10-03 03:29:19,091 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d43ba43c047738466-1759412046/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d43ba43c047738466%2F971d58b9c2ebf82cca074c507849ecef-sPWDXYRSQY.json
+2025-10-03 03:29:19,092 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:29:19,092 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:29:19,092 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5829
+2025-10-03 03:29:19,092 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_300x600%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:29:19,096 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:29:19,097 - INFO - Final dimensions to use: 300x600
+2025-10-03 03:29:21,102 - INFO - Waiting for animations to complete...
+2025-10-03 03:29:27,136 - INFO - Taking screenshot with dimensions: 300x600, format: jpg
+2025-10-03 03:29:27,229 - INFO -   - hoxtonData present: False
+2025-10-03 03:29:27,229 - INFO -   - width: 300
+2025-10-03 03:29:27,230 - INFO -   - height: 600
+2025-10-03 03:29:27,316 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:29:27,319 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:29:27,319 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:29:27,335 - INFO - 127.0.0.1 - - [03/Oct/2025 03:29:27] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:29:40,696 - INFO - 127.0.0.1 - - [03/Oct/2025 03:29:40] "POST /download-zip HTTP/1.1" 200 -
+2025-10-03 03:33:55,314 - INFO -  * Detected change in 'C:\\Users\\ADMIN\\Documents\\banner-to-static-utility\\app.py', reloading
+2025-10-03 03:33:55,366 - INFO -  * Restarting with stat
+2025-10-03 03:33:55,872 - WARNING -  * Debugger is active!
+2025-10-03 03:33:55,876 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:34:09,475 - INFO -  * Detected change in 'C:\\Users\\ADMIN\\Documents\\banner-to-static-utility\\app.py', reloading
+2025-10-03 03:34:09,515 - INFO -  * Restarting with stat
+2025-10-03 03:34:10,030 - WARNING -  * Debugger is active!
+2025-10-03 03:34:10,034 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:35:33,203 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.2:5000
+2025-10-03 03:35:33,203 - INFO - [33mPress CTRL+C to quit[0m
+2025-10-03 03:35:33,204 - INFO -  * Restarting with stat
+2025-10-03 03:35:33,704 - WARNING -  * Debugger is active!
+2025-10-03 03:35:33,708 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:35:46,036 - INFO - 127.0.0.1 - - [03/Oct/2025 03:35:46] "GET /?id=1898b0f6-eb7b-4598-978d-d906bb97cb17&vscodeBrowserReqId=1759433745612 HTTP/1.1" 200 -
+2025-10-03 03:35:46,186 - INFO - 127.0.0.1 - - [03/Oct/2025 03:35:46] "[36mGET /styles.css HTTP/1.1[0m" 304 -
+2025-10-03 03:35:46,378 - INFO - 127.0.0.1 - - [03/Oct/2025 03:35:46] "GET /script.js HTTP/1.1" 200 -
+2025-10-03 03:36:22,509 - INFO -  * Detected change in 'C:\\Users\\ADMIN\\Documents\\banner-to-static-utility\\app.py', reloading
+2025-10-03 03:36:22,556 - INFO -  * Restarting with stat
+2025-10-03 03:36:23,115 - WARNING -  * Debugger is active!
+2025-10-03 03:36:23,119 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:36:24,036 - INFO -  * Detected change in 'C:\\Users\\ADMIN\\Documents\\banner-to-static-utility\\app.py', reloading
+2025-10-03 03:36:24,082 - INFO -  * Restarting with stat
+2025-10-03 03:36:24,609 - WARNING -  * Debugger is active!
+2025-10-03 03:36:24,613 - INFO -  * Debugger PIN: 279-594-372
+2025-10-03 03:36:26,169 - INFO - 127.0.0.1 - - [03/Oct/2025 03:36:26] "GET / HTTP/1.1" 200 -
+2025-10-03 03:36:26,186 - INFO - 127.0.0.1 - - [03/Oct/2025 03:36:26] "[36mGET /styles.css HTTP/1.1[0m" 304 -
+2025-10-03 03:36:26,359 - INFO - 127.0.0.1 - - [03/Oct/2025 03:36:26] "GET /script.js HTTP/1.1" 200 -
+2025-10-03 03:37:10,035 - INFO - Navigating to: https://www.hoxton.co/share/Y5DE6tw5aA
+2025-10-03 03:37:10,048 - INFO - Navigating to: https://www.hoxton.co/share/5iBIyL7EsB
+2025-10-03 03:37:10,052 - INFO - Navigating to: https://www.hoxton.co/share/HcL3xvSdcJ
+2025-10-03 03:37:10,067 - INFO - Navigating to: https://www.hoxton.co/share/MY09qDu0Y8
+2025-10-03 03:37:10,073 - INFO - Navigating to: https://www.hoxton.co/share/XxFxdvmXQU
+2025-10-03 03:37:20,056 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:20,059 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="320" height="100" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d205a7d37f2eef17f-1759412046/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d205a7d37f2eef17f%2F7f8fe24bc39039f129d740e77289d2d5-ISsj8KU18g.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:20,066 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:20,070 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:20,070 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:20,070 - INFO -   - Has data: True
+2025-10-03 03:37:20,071 - INFO -   - Data length: 5806
+2025-10-03 03:37:20,071 - INFO -   - Parsed name: None
+2025-10-03 03:37:20,071 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:20,078 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:20,084 - INFO - Detection method: iframe content
+2025-10-03 03:37:20,084 - INFO - Detected dimensions: 320x100
+2025-10-03 03:37:20,085 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:20,085 - INFO - Body: 1920x1080
+2025-10-03 03:37:20,087 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:20,093 - INFO - Page source sample around 'hoxton':   </style></head>
+        
+    <body>
+    
+        <iframe width="320" height="50" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4dc9c17529f3c40252-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4dc9c17529f3c40252%2Fbeb734bcdabf843e1a35c6bee17b964e-dHrVy84G5S.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:20,095 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:20,096 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:20,097 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d205a7d37f2eef17f-1759412046/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d205a7d37f2eef17f%2F7f8fe24bc39039f129d740e77289d2d5-ISsj8KU18g.json
+2025-10-03 03:37:20,097 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:20,097 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:20,098 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5806
+2025-10-03 03:37:20,100 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_320x100%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:37:20,105 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:20,107 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:20,108 - INFO - Final dimensions to use: 320x100
+2025-10-03 03:37:20,112 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:20,112 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:20,112 - INFO -   - Has data: True
+2025-10-03 03:37:20,113 - INFO -   - Data length: 5804
+2025-10-03 03:37:20,113 - INFO -   - Parsed name: None
+2025-10-03 03:37:20,113 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:20,120 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:20,123 - INFO - Detection method: iframe content
+2025-10-03 03:37:20,124 - INFO - Detected dimensions: 320x50
+2025-10-03 03:37:20,124 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:20,124 - INFO - Body: 1920x1080
+2025-10-03 03:37:20,131 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:20,131 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:20,131 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4dc9c17529f3c40252-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4dc9c17529f3c40252%2Fbeb734bcdabf843e1a35c6bee17b964e-dHrVy84G5S.json
+2025-10-03 03:37:20,132 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:20,132 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:20,132 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5804
+2025-10-03 03:37:20,132 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_320x50%E2%80%8B%22,%22reportingLabel%22:%22%7...
+2025-10-03 03:37:20,135 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:20,135 - INFO - Final dimensions to use: 320x50
+2025-10-03 03:37:20,508 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:20,511 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="160" height="600" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e53-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e53%2Feaf1ec4043121dedcc202b4d602202d2-qlhK8AKLAB.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:20,517 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:20,521 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:20,521 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:20,521 - INFO -   - Has data: True
+2025-10-03 03:37:20,521 - INFO -   - Data length: 5835
+2025-10-03 03:37:20,521 - INFO -   - Parsed name: None
+2025-10-03 03:37:20,522 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:20,528 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:20,531 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:37:20,531 - INFO - Detected dimensions: 160x600
+2025-10-03 03:37:20,532 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:20,532 - INFO - Body: 1920x1080
+2025-10-03 03:37:20,537 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:20,538 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:20,538 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e53-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e53%2Feaf1ec4043121dedcc202b4d602202d2-qlhK8AKLAB.json
+2025-10-03 03:37:20,538 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:20,538 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:20,538 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5835
+2025-10-03 03:37:20,539 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_160x600%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:37:20,542 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:20,542 - INFO - Final dimensions to use: 160x600
+2025-10-03 03:37:20,600 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:20,602 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="300" height="250" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e54-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e54%2F3f2c57ced099bbee10b2f94cd37d1208-srtWLKslcH.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:20,608 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:20,612 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:20,612 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:20,612 - INFO -   - Has data: True
+2025-10-03 03:37:20,613 - INFO -   - Data length: 5809
+2025-10-03 03:37:20,613 - INFO -   - Parsed name: None
+2025-10-03 03:37:20,613 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:20,620 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:20,623 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:37:20,624 - INFO - Detected dimensions: 300x250
+2025-10-03 03:37:20,624 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:20,624 - INFO - Body: 1920x1080
+2025-10-03 03:37:20,630 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:20,630 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:20,631 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d02caeb4adc840e54-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d02caeb4adc840e54%2F3f2c57ced099bbee10b2f94cd37d1208-srtWLKslcH.json
+2025-10-03 03:37:20,631 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:20,631 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:20,631 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5809
+2025-10-03 03:37:20,631 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_300x250%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:37:20,635 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:20,636 - INFO - Final dimensions to use: 300x250
+2025-10-03 03:37:20,753 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:20,755 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="300" height="600" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d43ba43c047738466-1759412046/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d43ba43c047738466%2F971d58b9c2ebf82cca074c507849ecef-sPWDXYRSQY.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:20,762 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:20,765 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:20,766 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:20,766 - INFO -   - Has data: True
+2025-10-03 03:37:20,766 - INFO -   - Data length: 5829
+2025-10-03 03:37:20,766 - INFO -   - Parsed name: None
+2025-10-03 03:37:20,766 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:20,773 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:20,776 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:37:20,776 - INFO - Detected dimensions: 300x600
+2025-10-03 03:37:20,776 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:20,777 - INFO - Body: 1920x1080
+2025-10-03 03:37:20,783 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:20,784 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:20,784 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4d43ba43c047738466-1759412046/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4d43ba43c047738466%2F971d58b9c2ebf82cca074c507849ecef-sPWDXYRSQY.json
+2025-10-03 03:37:20,784 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:20,784 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:20,784 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5829
+2025-10-03 03:37:20,785 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_300x600%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:37:20,788 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:20,788 - INFO - Final dimensions to use: 300x600
+2025-10-03 03:37:22,113 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:22,139 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:22,548 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:22,640 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:22,792 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:25,129 - INFO - Taking screenshot with dimensions: 320x100, format: jpg
+2025-10-03 03:37:25,157 - INFO - Taking screenshot with dimensions: 320x50, format: jpg
+2025-10-03 03:37:25,191 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:25,192 - INFO -   - width: 320
+2025-10-03 03:37:25,197 - INFO -   - height: 100
+2025-10-03 03:37:25,214 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:25,214 - INFO -   - width: 320
+2025-10-03 03:37:25,214 - INFO -   - height: 50
+2025-10-03 03:37:25,311 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:25,314 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:25,317 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:25,320 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:25,320 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:25,320 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:25,341 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:25] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:25,345 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:25] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:25,561 - INFO - Taking screenshot with dimensions: 160x600, format: jpg
+2025-10-03 03:37:25,613 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:25,613 - INFO -   - width: 160
+2025-10-03 03:37:25,613 - INFO -   - height: 600
+2025-10-03 03:37:25,661 - INFO - Taking screenshot with dimensions: 300x250, format: jpg
+2025-10-03 03:37:25,690 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:25,693 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:25,694 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:25,711 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:25] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:25,720 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:25,720 - INFO -   - width: 300
+2025-10-03 03:37:25,720 - INFO -   - height: 250
+2025-10-03 03:37:25,792 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:25,795 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:25,795 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:25,806 - INFO - Taking screenshot with dimensions: 300x600, format: jpg
+2025-10-03 03:37:25,809 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:25] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:25,883 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:25,883 - INFO -   - width: 300
+2025-10-03 03:37:25,884 - INFO -   - height: 600
+2025-10-03 03:37:25,952 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:25,956 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:25,956 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:25,970 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:25] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:26,953 - INFO - Navigating to: https://www.hoxton.co/share/6T7KrCeoBP
+2025-10-03 03:37:27,257 - INFO - Navigating to: https://www.hoxton.co/share/opkRZjuXG7
+2025-10-03 03:37:34,454 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:34,457 - INFO - Page source sample around 'hoxton':  </style></head>
+        
+    <body>
+    
+        <iframe width="970" height="250" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4e906b3e7b2b354126-1759412047/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4e906b3e7b2b354126%2F31c3b72dc5ad7a7d2ac0bd3a22b6bea5-WgByb70E2F.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:34,466 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:34,470 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:34,471 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:34,471 - INFO -   - Has data: True
+2025-10-03 03:37:34,471 - INFO -   - Data length: 5808
+2025-10-03 03:37:34,472 - INFO - Hoxton debug info: {'hoxtonElementsFound': 0, 'dataElementsFound': 0, 'pageHasHoxtonText': True, 'pageHasReportingLabel': False, 'sampleDataElements': []}
+2025-10-03 03:37:34,472 - INFO -   - Parsed name: None
+2025-10-03 03:37:34,473 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:34,475 - INFO - Page source sample around 'hoxton':   </style></head>
+        
+    <body>
+    
+        <iframe width="728" height="90" src="https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4dc9c17529f3c40253-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4dc9c17529f3c40253%2Fccbe36d0cb4b0d94726b34843e84d0ad-s8qpSKEVfA.json"></iframe>
+    
+    </body></html>
+2025-10-03 03:37:34,483 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:34,486 - INFO - Applying enhanced hoxton detection...
+2025-10-03 03:37:34,487 - INFO - Detection method: body > *:first-child (CSS dimensions)
+2025-10-03 03:37:34,488 - INFO - Detected dimensions: 970x250
+2025-10-03 03:37:34,489 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:34,489 - INFO - Body: 1920x1080
+2025-10-03 03:37:34,492 - INFO - Enhanced hoxton detection found: 1 hoxton elements
+2025-10-03 03:37:34,494 - INFO - Found hoxton element from iframe-0
+2025-10-03 03:37:34,497 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:34,498 - INFO -   - Has data: True
+2025-10-03 03:37:34,498 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:34,498 - INFO -   - Data length: 5805
+2025-10-03 03:37:34,499 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4e906b3e7b2b354126-1759412047/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4e906b3e7b2b354126%2F31c3b72dc5ad7a7d2ac0bd3a22b6bea5-WgByb70E2F.json
+2025-10-03 03:37:34,499 - INFO -   - Parsed name: None
+2025-10-03 03:37:34,499 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:34,500 - INFO -   - Parsed reportingLabel: None
+2025-10-03 03:37:34,500 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:34,500 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5808
+2025-10-03 03:37:34,504 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_970x250%E2%80%8B%22,%22reportingLabel%22:%22%...
+2025-10-03 03:37:34,508 - INFO - Iframe URLs detected: []
+2025-10-03 03:37:34,513 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:34,516 - INFO - Detection method: iframe content
+2025-10-03 03:37:34,516 - INFO - Final dimensions to use: 970x250
+2025-10-03 03:37:34,517 - INFO - Detected dimensions: 728x90
+2025-10-03 03:37:34,518 - INFO - Viewport: 1920x1080
+2025-10-03 03:37:34,518 - INFO - Body: 1920x1080
+2025-10-03 03:37:34,527 - INFO -   - [main-doc] Found 0 hoxton elements
+2025-10-03 03:37:34,527 - INFO -   - Found 1 iframes to check
+2025-10-03 03:37:34,527 - INFO -   - Iframe 0 src: https://www.hoxton.co/clients/65b9175731ca02000853d2c5/master-templates/68de7f4dc9c17529f3c40253-1759412045/index.html?manifest=clients%2F65b9175731ca02000853d2c5%2Fmaster-templates%2F68de7f4dc9c17529f3c40253%2Fccbe36d0cb4b0d94726b34843e84d0ad-s8qpSKEVfA.json
+2025-10-03 03:37:34,527 - INFO -   - Successfully accessed iframe 0
+2025-10-03 03:37:34,527 - INFO -   - [iframe-0] Found 1 hoxton elements
+2025-10-03 03:37:34,528 - INFO -   - [iframe-0] Found hoxton with data attr, length: 5805
+2025-10-03 03:37:34,528 - INFO -   - [iframe-0] First decode: %7B%22name%22:%22123_Payworld_Display_Think_IAB_market_728x90%E2%80%8B%22,%22reportingLabel%22:%22%7...
+2025-10-03 03:37:34,532 - INFO -   - [iframe-0] Parsed JSON, keys: name, reportingLabel, adType, adSize, platform, backupQuality, logo, mainBg, brandCSS, headline, headlineFontSize, subHeadline, subHeadlineFontSize, cta, versionName, exit_url, messageCSS, hoxtonSettings, metadata
+2025-10-03 03:37:34,532 - INFO - Final dimensions to use: 728x90
+2025-10-03 03:37:36,522 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:36,536 - INFO - Waiting for animations to complete...
+2025-10-03 03:37:39,537 - INFO - Taking screenshot with dimensions: 970x250, format: jpg
+2025-10-03 03:37:39,551 - INFO - Taking screenshot with dimensions: 728x90, format: jpg
+2025-10-03 03:37:39,618 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:39,618 - INFO -   - width: 728
+2025-10-03 03:37:39,618 - INFO -   - height: 90
+2025-10-03 03:37:39,645 - INFO -   - hoxtonData present: False
+2025-10-03 03:37:39,645 - INFO -   - width: 970
+2025-10-03 03:37:39,645 - INFO -   - height: 250
+2025-10-03 03:37:39,702 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:39,706 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:39,706 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:39,722 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:39] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:39,729 - INFO -   - banner_info keys: ['width', 'height', 'detectionMethod', 'viewportWidth', 'viewportHeight', 'bodyWidth', 'bodyHeight', 'isHoxtonOrSimilar', 'hostname', 'bannerName', 'bannerNameDebug', 'metadata', 'optimization']
+2025-10-03 03:37:39,733 - INFO -   - hoxtonData: NOT SET
+2025-10-03 03:37:39,733 - INFO -   - hoxton_data extracted: {}
+2025-10-03 03:37:39,745 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:39] "POST /capture HTTP/1.1" 200 -
+2025-10-03 03:37:47,024 - INFO - 127.0.0.1 - - [03/Oct/2025 03:37:47] "POST /download-zip HTTP/1.1" 200 -

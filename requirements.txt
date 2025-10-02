@@ -1,5 +1,6 @@
 flask>=2.3.0
 flask-cors>=4.0.0
 playwright>=1.39.0
+Pillow>=10.0.0
 asyncio
 setuptools>=65.0.0
