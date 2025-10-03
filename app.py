@@ -49,16 +49,17 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=25, max_quality=95):
+def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=60, max_quality=95):
     """
     Convert image data to JPG format and optimize to stay under size limit
-    
+    Enhanced to preserve text quality better
+
     Args:
         image_data: Raw image data (bytes)
         max_size_kb: Maximum file size in KB (default: 49)
-        min_quality: Minimum JPG quality to try (default: 25)
+        min_quality: Minimum JPG quality to try (default: 60 - better for text)
         max_quality: Maximum JPG quality to start with (default: 95)
-    
+
     Returns:
         tuple: (optimized_jpg_data, final_quality, final_size_kb)
     """
@@ -82,9 +83,10 @@ def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=25, max_qualit
         
         for quality in range(max_quality, min_quality - 1, -5):
             output = image_io.BytesIO()
-            image.save(output, format='JPEG', quality=quality, optimize=True)
+            # Use subsampling=0 to preserve text sharpness
+            image.save(output, format='JPEG', quality=quality, optimize=True, subsampling=0)
             jpg_data = output.getvalue()
-            
+
             if len(jpg_data) <= max_size_bytes:
                 best_quality = quality
                 best_data = jpg_data
@@ -93,7 +95,8 @@ def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=25, max_qualit
         # If still too large, try with minimum quality
         if best_data is None:
             output = image_io.BytesIO()
-            image.save(output, format='JPEG', quality=min_quality, optimize=True)
+            # Use subsampling=0 to preserve text sharpness even at minimum quality
+            image.save(output, format='JPEG', quality=min_quality, optimize=True, subsampling=0)
             best_data = output.getvalue()
             best_quality = min_quality
         
@@ -125,24 +128,26 @@ def ensure_size_limit(image_data, max_size_kb=49):
             background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
             image = background
         
-        # Try progressively lower quality until under limit
-        for quality in range(10, 0, -1):
+        # Emergency compression - avoid going below 50% quality to preserve text
+        # Try progressively lower quality until under limit, but not too low for text
+        for quality in range(50, 25, -5):  # Don't go below 25% for text readability
             output = image_io.BytesIO()
-            image.save(output, format='JPEG', quality=quality, optimize=True)
+            image.save(output, format='JPEG', quality=quality, optimize=True, subsampling=0)
             result = output.getvalue()
             if len(result) <= max_size_kb * 1024:
                 log_to_file(f"Emergency compression applied: Quality {quality}%, Size: {len(result)/1024:.1f}KB")
                 return result
         
-        # If still too large, resize the image
-        scale_factor = 0.8
-        while len(image_data) > max_size_kb * 1024 and scale_factor > 0.3:
+        # If still too large, resize the image (last resort, preserve text as much as possible)
+        scale_factor = 0.9  # Start with smaller reduction  
+        while len(image_data) > max_size_kb * 1024 and scale_factor > 0.5:  # Don't go below 50% size
             new_size = (int(image.width * scale_factor), int(image.height * scale_factor))
             resized_image = image.resize(new_size, Image.Resampling.LANCZOS)
             output = image_io.BytesIO()
-            resized_image.save(output, format='JPEG', quality=20, optimize=True)
+            # Use higher quality even when resizing to preserve text
+            resized_image.save(output, format='JPEG', quality=50, optimize=True, subsampling=0)
             image_data = output.getvalue()
-            scale_factor -= 0.1
+            scale_factor -= 0.05  # Smaller steps for better control
         
         log_to_file(f"Image resized and compressed: Size: {len(image_data)/1024:.1f}KB")
         return image_data
@@ -164,20 +169,18 @@ class BrowserPool:
         if not PLAYWRIGHT_AVAILABLE:
             raise Exception("Playwright is not installed. Please install it with: pip install playwright")
         
-        # Try to reuse an existing browser
-        if self.available_browsers:
-            browser_info = self.available_browsers.pop()
-            self.in_use_browsers.append(browser_info)
-            
-            # Create new context on existing browser
-            context = browser_info['browser'].new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
-            )
-            
-            return browser_info['playwright'], browser_info['browser'], context
-        
-        # Create new browser if pool not full
+            # Try to reuse an existing browser
+            if self.available_browsers:
+                browser_info = self.available_browsers.pop()
+                self.in_use_browsers.append(browser_info)
+
+                # Create new context on existing browser
+                context = browser_info['browser'].new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    device_scale_factor=2,  # 2x scaling for crisp text rendering
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+                )
+                return browser_info['playwright'], browser_info['browser'], context        # Create new browser if pool not full
         if len(self.in_use_browsers) < self.pool_size:
             playwright = sync_playwright().start()
             browser = playwright.chromium.launch(
@@ -199,12 +202,13 @@ class BrowserPool:
             
             browser_info = {'playwright': playwright, 'browser': browser}
             self.in_use_browsers.append(browser_info)
-            
+
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
+                device_scale_factor=2,  # 2x scaling for crisp text rendering
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
             )
-            
+
             return playwright, browser, context
         
         # If pool is full, create temporary browser (fallback)
@@ -224,6 +228,7 @@ class BrowserPool:
         browser = playwright.chromium.launch(headless=True)
         context = browser.new_context(
             viewport={'width': 1920, 'height': 1080},
+            device_scale_factor=2,  # 2x scaling for crisp text rendering
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
         )
         return playwright, browser, context
@@ -281,6 +286,7 @@ class ScreenshotService:
         # Create a new context with optimized settings
         context = browser.new_context(
             viewport={'width': 1920, 'height': 1080},
+            device_scale_factor=2,  # 2x scaling for crisp text rendering
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
         )
         
@@ -938,17 +944,22 @@ class ScreenshotService:
                     logger.info(f"  - {attempt}")
             
             logger.info(f"Final dimensions to use: {width}x{height}")
-            
-            # Set viewport to be larger than the banner to avoid scrollbars
-            viewport_width = max(width + 100, 800)
-            viewport_height = max(height + 100, 600)
-            page.set_viewport_size({'width': viewport_width, 'height': viewport_height})
-            
+
+            # Set viewport to exact banner dimensions for pixel-perfect rendering
+            page.set_viewport_size({'width': width, 'height': height})
+
+            # Add font rendering optimizations for crisp text
+            page.add_init_script("""
+                // Force font smoothing for better text rendering
+                document.documentElement.style.webkitFontSmoothing = 'antialiased';
+                document.documentElement.style.mozOsxFontSmoothing = 'grayscale';
+                document.documentElement.style.fontSmooth = 'always';
+                document.documentElement.style.textRendering = 'optimizeLegibility';
+            """)
+
             # Wait for animations and dynamic content to complete
             # Wait for initial load
-            time.sleep(2)
-
-            # Advanced animation detection with GSAP support (including iframes)
+            time.sleep(2)            # Advanced animation detection with GSAP support (including iframes)
             logger.info("Detecting animations (GSAP in iframes, CSS, Video)...")
             
             # Enhanced animation detection with iframe GSAP Timeline support
