@@ -49,14 +49,14 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def optimize_image_to_jpg(image_data, max_size_kb=50, min_quality=30, max_quality=95):
+def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=25, max_quality=95):
     """
     Convert image data to JPG format and optimize to stay under size limit
     
     Args:
         image_data: Raw image data (bytes)
-        max_size_kb: Maximum file size in KB (default: 50)
-        min_quality: Minimum JPG quality to try (default: 30)
+        max_size_kb: Maximum file size in KB (default: 49)
+        min_quality: Minimum JPG quality to try (default: 25)
         max_quality: Maximum JPG quality to start with (default: 95)
     
     Returns:
@@ -102,10 +102,54 @@ def optimize_image_to_jpg(image_data, max_size_kb=50, min_quality=30, max_qualit
         log_to_file(f"Image optimized: Quality {best_quality}%, Size: {final_size_kb:.1f}KB")
         
         return best_data, best_quality, final_size_kb
-        
+
     except Exception as e:
         log_to_file(f"Error optimizing image: {str(e)}")
         raise Exception(f"Failed to optimize image: {str(e)}")
+
+def ensure_size_limit(image_data, max_size_kb=49):
+    """
+    Final safety check to ensure image is under size limit
+    Applies extreme compression if necessary
+    """
+    if len(image_data) <= max_size_kb * 1024:
+        return image_data
+    
+    # Apply extreme compression as last resort
+    try:
+        image = Image.open(image_io.BytesIO(image_data))
+        if image.mode in ('RGBA', 'LA', 'P'):
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode == 'P':
+                image = image.convert('RGBA')
+            background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+            image = background
+        
+        # Try progressively lower quality until under limit
+        for quality in range(10, 0, -1):
+            output = image_io.BytesIO()
+            image.save(output, format='JPEG', quality=quality, optimize=True)
+            result = output.getvalue()
+            if len(result) <= max_size_kb * 1024:
+                log_to_file(f"Emergency compression applied: Quality {quality}%, Size: {len(result)/1024:.1f}KB")
+                return result
+        
+        # If still too large, resize the image
+        scale_factor = 0.8
+        while len(image_data) > max_size_kb * 1024 and scale_factor > 0.3:
+            new_size = (int(image.width * scale_factor), int(image.height * scale_factor))
+            resized_image = image.resize(new_size, Image.Resampling.LANCZOS)
+            output = image_io.BytesIO()
+            resized_image.save(output, format='JPEG', quality=20, optimize=True)
+            image_data = output.getvalue()
+            scale_factor -= 0.1
+        
+        log_to_file(f"Image resized and compressed: Size: {len(image_data)/1024:.1f}KB")
+        return image_data
+    
+    except Exception as e:
+        log_to_file(f"Emergency compression failed: {str(e)}")
+        return image_data
 
 class BrowserPool:
     """Manages a pool of browser instances for better performance"""
@@ -903,46 +947,247 @@ class ScreenshotService:
             # Wait for animations and dynamic content to complete
             # Wait for initial load
             time.sleep(2)
+
+            # Advanced animation detection with GSAP support (including iframes)
+            logger.info("Detecting animations (GSAP in iframes, CSS, Video)...")
             
-            # Wait for animations to complete by checking if elements are still changing
-            logger.info("Waiting for animations to complete...")
-            for i in range(wait_time * 2):  # Check every 0.5 seconds
-                try:
-                    # Check if there are any running animations or transitions
-                    has_animations = page.evaluate("""
-                        () => {
-                            // Check for CSS animations
-                            const elements = document.querySelectorAll('*');
-                            for (let el of elements) {
-                                const style = window.getComputedStyle(el);
-                                const animation = style.getPropertyValue('animation-name');
-                                const transition = style.getPropertyValue('transition-property');
-                                
-                                if (animation !== 'none' || transition !== 'none') {
-                                    return true;
+            # Enhanced animation detection with iframe GSAP Timeline support
+            animation_info = page.evaluate("""
+                () => {
+                    let maxDuration = 0;
+                    let animationCount = 0;
+                    let gsapInfo = { found: false, timelines: [], totalDuration: 0, source: 'none' };
+                    
+                    // Function to check GSAP in a document (main or iframe)
+                    function checkGsapInDocument(doc, sourceName) {
+                        const results = { timelines: [], maxDuration: 0 };
+                        
+                        // Check if GSAP and Creative exist in this document context
+                        const gsapLib = doc.defaultView?.gsap;
+                        const Creative = doc.defaultView?.Creative;
+                        
+                        if (!gsapLib && !Creative) return results;
+                        
+                        // PRIORITY 1: Check Creative.tl pattern (common in banner frameworks)
+                        if (Creative && Creative.tl) {
+                            if (typeof Creative.tl.duration === 'function') {
+                                try {
+                                    const duration = Creative.tl.duration();
+                                    const progress = Creative.tl.progress ? Creative.tl.progress() : 0;
+                                    if (duration && duration > 0) {
+                                        results.timelines.push({ 
+                                            type: 'Creative.tl', 
+                                            duration, 
+                                            progress,
+                                            source: sourceName,
+                                            isActive: Creative.tl.isActive ? Creative.tl.isActive() : false
+                                        });
+                                        results.maxDuration = Math.max(results.maxDuration, duration);
+                                    }
+                                } catch (e) {
+                                    console.log(`Error accessing Creative.tl.duration in ${sourceName}:`, e);
                                 }
                             }
-                            
-                            // Check for canvas animations (common in banner ads)
-                            const canvases = document.querySelectorAll('canvas');
-                            return canvases.length > 0;
+                            if (typeof Creative.tl.totalDuration === 'function') {
+                                try {
+                                    const totalDuration = Creative.tl.totalDuration();
+                                    const progress = Creative.tl.progress ? Creative.tl.progress() : 0;
+                                    if (totalDuration && totalDuration > 0) {
+                                        results.timelines.push({ 
+                                            type: 'Creative.tl.totalDuration', 
+                                            duration: totalDuration, 
+                                            progress,
+                                            source: sourceName,
+                                            isActive: Creative.tl.isActive ? Creative.tl.isActive() : false
+                                        });
+                                        results.maxDuration = Math.max(results.maxDuration, totalDuration);
+                                    }
+                                } catch (e) {
+                                    console.log(`Error accessing Creative.tl.totalDuration in ${sourceName}:`, e);
+                                }
+                            }
                         }
-                    """)
-                    
-                    time.sleep(0.5)
-                    
-                    # If no animations detected in the last check, break early
-                    if not has_animations and i > 4:  # At least 2 seconds
-                        logger.info("No animations detected, proceeding with screenshot")
-                        break
                         
-                except:
-                    pass
+                        // Check GSAP global timeline
+                        if (gsapLib && gsapLib.globalTimeline) {
+                            try {
+                                const duration = gsapLib.globalTimeline.totalDuration();
+                                const progress = gsapLib.globalTimeline.progress();
+                                if (duration && duration > 0) {
+                                    results.timelines.push({ 
+                                        type: 'global', 
+                                        duration, 
+                                        progress,
+                                        source: sourceName,
+                                        isActive: gsapLib.globalTimeline.isActive()
+                                    });
+                                    results.maxDuration = Math.max(results.maxDuration, duration);
+                                }
+                            } catch (e) {
+                                console.log(`Error accessing gsap.globalTimeline in ${sourceName}:`, e);
+                            }
+                        }
+                        
+                        // Check named timelines in window scope
+                        const possibleNames = ['tl', 'timeline', 'mainTimeline', 'masterTimeline', 'bannerTimeline'];
+                        for (const name of possibleNames) {
+                            try {
+                                const timeline = doc.defaultView[name];
+                                if (timeline && typeof timeline.totalDuration === 'function') {
+                                    const duration = timeline.totalDuration();
+                                    const progress = timeline.progress ? timeline.progress() : 0;
+                                    if (duration && duration > 0) {
+                                        results.timelines.push({ 
+                                            type: name, 
+                                            duration, 
+                                            progress,
+                                            source: sourceName,
+                                            isActive: timeline.isActive ? timeline.isActive() : false
+                                        });
+                                        results.maxDuration = Math.max(results.maxDuration, duration);
+                                    }
+                                }
+                            } catch (e) {
+                                console.log(`Error accessing ${name} in ${sourceName}:`, e);
+                            }
+                        }
+                        
+                        return results;
+                    }
+                    
+                    // FIRST: Check main document
+                    const mainResults = checkGsapInDocument(document, 'main-document');
+                    if (mainResults.timelines.length > 0) {
+                        gsapInfo.found = true;
+                        gsapInfo.timelines = mainResults.timelines;
+                        gsapInfo.totalDuration = mainResults.maxDuration;
+                        gsapInfo.source = 'main-document';
+                        maxDuration = Math.max(maxDuration, mainResults.maxDuration);
+                        animationCount += mainResults.timelines.length;
+                    }
+                    
+                    // SECOND: Check all iframes (where Creative.tl likely resides)
+                    const iframes = document.querySelectorAll('iframe');
+                    console.log(`Found ${iframes.length} iframes to check for GSAP`);
+                    
+                    for (let i = 0; i < iframes.length; i++) {
+                        try {
+                            const iframe = iframes[i];
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                            
+                            if (iframeDoc) {
+                                console.log(`Checking iframe ${i} for GSAP timelines...`);
+                                const iframeResults = checkGsapInDocument(iframeDoc, `iframe-${i}`);
+                                if (iframeResults.timelines.length > 0) {
+                                    console.log(`Found ${iframeResults.timelines.length} GSAP timelines in iframe ${i}`);
+                                    gsapInfo.found = true;
+                                    gsapInfo.timelines.push(...iframeResults.timelines);
+                                    gsapInfo.totalDuration = Math.max(gsapInfo.totalDuration, iframeResults.maxDuration);
+                                    gsapInfo.source = `iframe-${i}`;
+                                    maxDuration = Math.max(maxDuration, iframeResults.maxDuration);
+                                    animationCount += iframeResults.timelines.length;
+                                }
+                            } else {
+                                console.log(`Cannot access iframe ${i} document`);
+                            }
+                        } catch (e) {
+                            console.log(`Cannot access iframe ${i}:`, e.message);
+                        }
+                    }
+                    
+                    // THIRD: CSS Animations (fallback if no GSAP found)
+                    if (!gsapInfo.found) {
+                        const elements = document.querySelectorAll('*');
+                        for (let el of elements) {
+                            const style = window.getComputedStyle(el);
+                            
+                            // Check CSS animations
+                            const animationName = style.getPropertyValue('animation-name');
+                            const animationDuration = style.getPropertyValue('animation-duration');
+                            const animationIterationCount = style.getPropertyValue('animation-iteration-count');
+                            
+                            if (animationName !== 'none' && animationDuration !== '0s') {
+                                animationCount++;
+                                const duration = parseFloat(animationDuration.replace('s', ''));
+                                const iterations = animationIterationCount === 'infinite' ? 1 : 
+                                                 (parseFloat(animationIterationCount) || 1);
+                                const totalDuration = duration * iterations;
+                                maxDuration = Math.max(maxDuration, totalDuration);
+                            }
+                            
+                            // Check CSS transitions
+                            const transitionDuration = style.getPropertyValue('transition-duration');
+                            if (transitionDuration !== '0s') {
+                                const duration = parseFloat(transitionDuration.replace('s', ''));
+                                maxDuration = Math.max(maxDuration, duration);
+                            }
+                        }
+                    }
+                    
+                    // FOURTH: Video elements
+                    const videos = document.querySelectorAll('video');
+                    for (let video of videos) {
+                        if (video.duration && !isNaN(video.duration)) {
+                            maxDuration = Math.max(maxDuration, video.duration);
+                        }
+                    }
+                    
+                    return {
+                        maxDuration: maxDuration,
+                        animationCount: animationCount,
+                        hasCanvas: document.querySelectorAll('canvas').length > 0,
+                        hasVideo: videos.length > 0,
+                        gsap: gsapInfo
+                    };
+                }
+            """)
             
-            # Final wait to ensure everything is settled
-            time.sleep(1)
+            logger.info(f"Animation detection: {animation_info}")
             
-            # Take screenshot with proper format
+            # Extract animation information
+            detected_duration = animation_info.get('maxDuration', 0)
+            has_animations = animation_info.get('animationCount', 0) > 0
+            has_canvas = animation_info.get('hasCanvas', False)
+            has_video = animation_info.get('hasVideo', False)
+            gsap_info = animation_info.get('gsap', {})
+            
+            # GSAP-specific handling for precise end-frame capture
+            if gsap_info.get('found') and gsap_info.get('totalDuration', 0) > 0:
+                gsap_duration = gsap_info['totalDuration']
+                timeline_count = len(gsap_info.get('timelines', []))
+                
+                logger.info(f"🎬 GSAP detected: {timeline_count} timelines, total duration: {gsap_duration}s")
+                
+                # Use the specialized GSAP handler
+                gsap_handled = self._handle_gsap_timeline(page, max_timeout=30)
+                
+                if gsap_handled:
+                    logger.info("✅ GSAP timeline handled successfully - positioned at end frame")
+                else:
+                    logger.warning("⚠️ GSAP handler failed, using fallback wait")
+                    time.sleep(min(gsap_duration, 30))
+                    
+            # Fallback to other animation types if no GSAP
+            elif detected_duration > 0:
+                # We detected CSS animation duration - wait for full cycle plus buffer
+                optimal_wait = min(detected_duration + 1, 30)  # Cap at 30 seconds
+                logger.info(f"🎨 CSS animation duration: {detected_duration}s, waiting {optimal_wait}s")
+                time.sleep(optimal_wait)
+            elif has_canvas or has_video:
+                # Canvas/video content - use frame stability check
+                logger.info("🎥 Canvas/video content detected - using frame stability detection")
+                self._wait_for_frame_stability(page, timeout=wait_time*1000)
+            elif has_animations:
+                # Has animations but couldn't detect duration - use dynamic checking
+                logger.info("🔄 Animations detected but duration unknown - using dynamic detection")
+                self._wait_for_animation_completion(page, timeout=wait_time*1000)
+            else:
+                # No animations detected - use standard wait
+                logger.info(f"⏱️ No animations detected - using standard wait of {wait_time}s")
+                time.sleep(wait_time)
+            
+            # Final frame stability check to ensure we capture the end frame
+            self._ensure_end_frame(page, wait_time)            # Take screenshot with proper format
             logger.info(f"Taking screenshot with dimensions: {width}x{height}, format: {format}")
             
             # Ensure we're using the correct format
@@ -957,18 +1202,21 @@ class ScreenshotService:
             # Always convert to JPG with size optimization for compliance
             try:
                 optimized_jpg_data, final_quality, final_size_kb = optimize_image_to_jpg(screenshot_bytes)
+                
+                # Final safety check: Ensure file is absolutely under 49KB
+                optimized_jpg_data = ensure_size_limit(optimized_jpg_data, max_size_kb=49)
+                final_size_kb = len(optimized_jpg_data) / 1024
+                
                 screenshot_base64 = base64.b64encode(optimized_jpg_data).decode('utf-8')
                 actual_format = 'jpeg'
-                
-                logger.info(f"📷 Image optimized: {final_size_kb:.1f}KB at {final_quality}% quality")
-                
-                # Add optimization info to banner_info for reporting
+
+                logger.info(f"📷 Image optimized: {final_size_kb:.1f}KB at {final_quality}% quality")                # Add optimization info to banner_info for reporting
                 banner_info['optimization'] = {
                     'original_format': 'png',
                     'final_format': 'jpeg',
                     'final_quality': final_quality,
                     'final_size_kb': round(final_size_kb, 1),
-                    'size_limit_kb': 50
+                    'size_limit_kb': 49
                 }
                 
             except Exception as e:
@@ -1011,6 +1259,359 @@ class ScreenshotService:
             if playwright:
                 playwright.stop()
     
+    def _handle_gsap_timeline(self, page, max_timeout=30):
+        """Handle GSAP timeline with precise end-frame positioning (including iframes)"""
+        try:
+            # First detect GSAP timelines in main document and iframes
+            gsap_result = page.evaluate("""
+                () => {
+                    const results = { success: false, timelines: [], totalDuration: 0, contexts: [] };
+                    
+                    // Function to get GSAP info from a document
+                    function getGsapInfo(doc, contextName) {
+                        const contextResults = { timelines: [], maxDuration: 0, context: contextName };
+                        
+                        const gsapLib = doc.defaultView?.gsap;
+                        const Creative = doc.defaultView?.Creative;
+                        
+                        // Check Creative.tl pattern (priority)
+                        if (Creative && Creative.tl) {
+                            if (typeof Creative.tl.duration === 'function') {
+                                try {
+                                    const duration = Creative.tl.duration();
+                                    const progress = Creative.tl.progress ? Creative.tl.progress() : 0;
+                                    contextResults.timelines.push({ 
+                                        type: 'Creative.tl', 
+                                        duration, 
+                                        progress,
+                                        context: contextName,
+                                        isActive: Creative.tl.isActive ? Creative.tl.isActive() : false
+                                    });
+                                    contextResults.maxDuration = Math.max(contextResults.maxDuration, duration);
+                                } catch (e) {
+                                    console.log(`Error accessing Creative.tl in ${contextName}:`, e);
+                                }
+                            }
+                        }
+                        
+                        // Check GSAP global timeline
+                        if (gsapLib && gsapLib.globalTimeline) {
+                            try {
+                                const duration = gsapLib.globalTimeline.totalDuration();
+                                const progress = gsapLib.globalTimeline.progress();
+                                contextResults.timelines.push({ 
+                                    type: 'global', 
+                                    duration, 
+                                    progress,
+                                    context: contextName,
+                                    isActive: gsapLib.globalTimeline.isActive()
+                                });
+                                contextResults.maxDuration = Math.max(contextResults.maxDuration, duration);
+                            } catch (e) {
+                                console.log(`Error accessing globalTimeline in ${contextName}:`, e);
+                            }
+                        }
+                        
+                        // Check named timelines
+                        const possibleNames = ['tl', 'timeline', 'mainTimeline', 'masterTimeline', 'bannerTimeline'];
+                        for (const name of possibleNames) {
+                            try {
+                                if (doc.defaultView[name] && typeof doc.defaultView[name].totalDuration === 'function') {
+                                    const duration = doc.defaultView[name].totalDuration();
+                                    const progress = doc.defaultView[name].progress();
+                                    contextResults.timelines.push({ 
+                                        type: name, 
+                                        duration, 
+                                        progress,
+                                        context: contextName,
+                                        isActive: doc.defaultView[name].isActive ? doc.defaultView[name].isActive() : false
+                                    });
+                                    contextResults.maxDuration = Math.max(contextResults.maxDuration, duration);
+                                }
+                            } catch (e) {
+                                console.log(`Error accessing ${name} in ${contextName}:`, e);
+                            }
+                        }
+                        
+                        return contextResults;
+                    }
+                    
+                    // Check main document
+                    const mainContext = getGsapInfo(document, 'main');
+                    if (mainContext.timelines.length > 0) {
+                        results.success = true;
+                        results.timelines.push(...mainContext.timelines);
+                        results.totalDuration = Math.max(results.totalDuration, mainContext.maxDuration);
+                        results.contexts.push(mainContext);
+                    }
+                    
+                    // Check iframes
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let i = 0; i < iframes.length; i++) {
+                        try {
+                            const iframeDoc = iframes[i].contentDocument || iframes[i].contentWindow?.document;
+                            if (iframeDoc) {
+                                const iframeContext = getGsapInfo(iframeDoc, `iframe-${i}`);
+                                if (iframeContext.timelines.length > 0) {
+                                    results.success = true;
+                                    results.timelines.push(...iframeContext.timelines);
+                                    results.totalDuration = Math.max(results.totalDuration, iframeContext.maxDuration);
+                                    results.contexts.push(iframeContext);
+                                }
+                            }
+                        } catch (e) {
+                            console.log(`Cannot access iframe ${i}:`, e.message);
+                        }
+                    }
+                    
+                    return results;
+                }
+            """)
+            
+            if not gsap_result.get('success') or not gsap_result.get('timelines'):
+                logger.warning("No GSAP timelines found in main document or iframes")
+                return False
+                
+            total_duration = gsap_result.get('totalDuration', 0)
+            timelines = gsap_result.get('timelines', [])
+            contexts = gsap_result.get('contexts', [])
+            
+            logger.info(f"🎬 GSAP detected across {len(contexts)} contexts: {len(timelines)} timelines, max duration: {total_duration}s")
+            
+            # Log details about each timeline found
+            for timeline in timelines:
+                logger.info(f"   - {timeline['type']} in {timeline['context']}: {timeline['duration']}s (progress: {timeline.get('progress', 0):.2f})")
+            
+            # Calculate the maximum remaining time across all timelines
+            max_remaining_time = 0
+            current_progress = 1.0  # Start with assumption we're at the end
+            
+            for timeline in timelines:
+                timeline_progress = timeline.get('progress', 0)
+                timeline_remaining = timeline['duration'] * (1 - timeline_progress)
+                if timeline_remaining > max_remaining_time:
+                    max_remaining_time = timeline_remaining
+                    current_progress = timeline_progress
+            
+            logger.info(f"📊 Animation state: progress={current_progress:.2f}, remaining={max_remaining_time:.2f}s")
+            
+            # Enhanced waiting strategy with proper end-frame buffer
+            end_frame_buffer = 1.3  # 1.3 seconds for iframe content settling
+            
+            if max_remaining_time > 0.1:  # Animation still running
+                total_wait_time = max_remaining_time + end_frame_buffer
+                logger.info(f"⏳ Waiting for iframe GSAP completion: {max_remaining_time:.2f}s + {end_frame_buffer}s buffer = {total_wait_time:.2f}s")
+                time.sleep(min(total_wait_time, max_timeout))
+            else:
+                # Animation complete or nearly complete
+                logger.info(f"🎯 GSAP timeline(s) complete, adding {end_frame_buffer}s iframe settling buffer")
+                time.sleep(end_frame_buffer)
+            
+            # Final verification of timeline states
+            final_verification = page.evaluate("""
+                () => {
+                    const finalStates = [];
+                    
+                    function checkFinalState(doc, contextName) {
+                        const Creative = doc.defaultView?.Creative;
+                        const gsapLib = doc.defaultView?.gsap;
+                        
+                        if (Creative && Creative.tl && typeof Creative.tl.progress === 'function') {
+                            try {
+                                finalStates.push({
+                                    type: 'Creative.tl',
+                                    context: contextName,
+                                    progress: Creative.tl.progress(),
+                                    isActive: Creative.tl.isActive ? Creative.tl.isActive() : false
+                                });
+                            } catch (e) {
+                                console.log(`Error checking final state in ${contextName}:`, e);
+                            }
+                        }
+                        
+                        if (gsapLib && gsapLib.globalTimeline) {
+                            try {
+                                finalStates.push({
+                                    type: 'global',
+                                    context: contextName,
+                                    progress: gsapLib.globalTimeline.progress(),
+                                    isActive: gsapLib.globalTimeline.isActive()
+                                });
+                            } catch (e) {
+                                console.log(`Error checking global timeline in ${contextName}:`, e);
+                            }
+                        }
+                    }
+                    
+                    // Check main document
+                    checkFinalState(document, 'main');
+                    
+                    // Check iframes
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let i = 0; i < iframes.length; i++) {
+                        try {
+                            const iframeDoc = iframes[i].contentDocument || iframes[i].contentWindow?.document;
+                            if (iframeDoc) {
+                                checkFinalState(iframeDoc, `iframe-${i}`);
+                            }
+                        } catch (e) {
+                            console.log(`Cannot verify iframe ${i}:`, e.message);
+                        }
+                    }
+                    
+                    return finalStates;
+                }
+            """)
+            
+            logger.info(f"✅ Final iframe GSAP states: {final_verification}")
+            return True
+                
+        except Exception as e:
+            logger.error(f"Error handling iframe GSAP timeline: {e}")
+            return False
+
+    def _wait_for_frame_stability(self, page, timeout=5000, stability_time=500):
+        """Wait for frames to be stable (no changes for a certain period)"""
+        import time
+        
+        try:
+            # Take initial screenshot hash
+            initial_screenshot = page.screenshot()
+            initial_hash = hash(initial_screenshot)
+            
+            last_change_time = time.time()
+            start_time = time.time()
+            
+            while (time.time() - start_time) * 1000 < timeout:
+                time.sleep(0.1)  # Check every 100ms
+                
+                # Take new screenshot and compare
+                current_screenshot = page.screenshot()
+                current_hash = hash(current_screenshot)
+                
+                if current_hash != initial_hash:
+                    # Frame changed, reset timer
+                    last_change_time = time.time()
+                    initial_hash = current_hash
+                else:
+                    # Frame hasn't changed
+                    if (time.time() - last_change_time) * 1000 >= stability_time:
+                        logger.info(f"Frame stability achieved after {(time.time() - start_time) * 1000:.0f}ms")
+                        return True
+            
+            logger.warning(f"Frame stability timeout after {timeout}ms")
+            return False
+        except Exception as e:
+            logger.warning(f"Error checking frame stability: {e}")
+            return False
+    
+    def _wait_for_animation_completion(self, page, timeout=30000):
+        """Wait for CSS animations and transitions to complete"""
+        try:
+            # Get initial animation state
+            initial_state = page.evaluate("""
+                () => {
+                    const allElements = document.querySelectorAll('*');
+                    let activeAnimations = 0;
+                    let maxDuration = 0;
+                    
+                    for (const el of allElements) {
+                        const computedStyle = window.getComputedStyle(el);
+                        
+                        // Check for CSS animations
+                        const animationDuration = computedStyle.animationDuration;
+                        if (animationDuration && animationDuration !== '0s') {
+                            activeAnimations++;
+                            const duration = parseFloat(animationDuration) * 1000;
+                            maxDuration = Math.max(maxDuration, duration);
+                        }
+                        
+                        // Check for CSS transitions
+                        const transitionDuration = computedStyle.transitionDuration;
+                        if (transitionDuration && transitionDuration !== '0s') {
+                            activeAnimations++;
+                            const duration = parseFloat(transitionDuration) * 1000;
+                            maxDuration = Math.max(maxDuration, duration);
+                        }
+                    }
+                    
+                    return { activeAnimations, maxDuration };
+                }
+            """)
+            
+            if initial_state['activeAnimations'] == 0:
+                logger.info("No animations detected")
+                return True
+            
+            animation_timeout = min(initial_state['maxDuration'] + 2000, timeout)
+            logger.info(f"Detected {initial_state['activeAnimations']} animations, max duration: {initial_state['maxDuration']}ms, waiting {animation_timeout}ms")
+            
+            # Wait for the calculated time
+            time.sleep(animation_timeout / 1000)
+            
+            # Verify animations are actually complete
+            final_state = page.evaluate("""
+                () => {
+                    const allElements = document.querySelectorAll('*');
+                    let stillAnimating = 0;
+                    
+                    for (const el of allElements) {
+                        const computedStyle = window.getComputedStyle(el);
+                        
+                        // Check if animations are still running
+                        const animationPlayState = computedStyle.animationPlayState;
+                        if (animationPlayState === 'running') {
+                            stillAnimating++;
+                        }
+                    }
+                    
+                    return { stillAnimating };
+                }
+            """)
+            
+            if final_state['stillAnimating'] > 0:
+                logger.warning(f"Still {final_state['stillAnimating']} animations running after timeout")
+            else:
+                logger.info("All animations completed successfully")
+            
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Error waiting for animation completion: {e}")
+            return False
+    
+    def _ensure_end_frame(self, page, wait_time=3):
+        """Ensure we capture the end frame of any animation with proper settling"""
+        import time
+        
+        try:
+            # Step 1: Check for animations and wait for them
+            animation_completed = self._wait_for_animation_completion(page)
+            
+            # Step 2: Wait for frame stability 
+            frame_stable = self._wait_for_frame_stability(page)
+            
+            # Step 3: Enhanced buffer time for end-frame settling (1-1.5 seconds)
+            end_frame_buffer = max(wait_time, 1.2)  # Minimum 1.2 seconds buffer
+            logger.info(f"⏱️ Adding {end_frame_buffer:.1f}s end-frame settling buffer")
+            time.sleep(end_frame_buffer)
+            
+            # Step 4: Final frame stability verification
+            final_stable = self._wait_for_frame_stability(page, timeout=2000, stability_time=300)
+            
+            success = animation_completed and frame_stable and final_stable
+            logger.info(f"🎯 End frame capture ready: animations={animation_completed}, stable={frame_stable}, final_check={final_stable}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error ensuring end frame: {e}")
+            # Fall back to conservative wait time
+            conservative_wait = max(wait_time, 1.5)
+            logger.info(f"🛡️ Fallback: using {conservative_wait}s conservative wait")
+            time.sleep(conservative_wait)
+            return False
+
     def cleanup(self):
         """Clean up browser resources - no longer needed as we use fresh contexts"""
         pass
@@ -2238,6 +2839,12 @@ def batch_capture():
 def download_zip():
     """Create a ZIP file from multiple images"""
     try:
+        # Log all request details for debugging
+        logging.info(f"🔍 ZIP Download Request Received:")
+        logging.info(f"   - Method: {request.method}")
+        logging.info(f"   - Content-Type: {request.content_type}")
+        logging.info(f"   - User-Agent: {request.headers.get('User-Agent', 'Unknown')}")
+        
         data = request.get_json()
         if not data or 'images' not in data:
             return jsonify({'error': 'No images provided'}), 400
@@ -2245,6 +2852,8 @@ def download_zip():
         images = data['images']
         if not images:
             return jsonify({'error': 'Empty images list'}), 400
+        
+        logging.info(f"   - Number of images: {len(images)}")
         
         # Create a BytesIO object to store the ZIP in memory
         zip_buffer = io.BytesIO()
@@ -2269,16 +2878,30 @@ def download_zip():
         
         zip_buffer.seek(0)
         
-        # Generate timestamp for unique filename
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        zip_filename = f'banners_{timestamp}.zip'
+        # Generate simple backup filename without timestamp
+        zip_filename = 'backup.zip'
         
-        return send_file(
+        # Log the filename being used
+        logging.info(f"📦 ZIP Download - Generated filename: {zip_filename}")
+        
+        # Create response with explicit headers using multiple methods to ensure compatibility
+        response = send_file(
             zip_buffer,
             as_attachment=True,
             download_name=zip_filename,
             mimetype='application/zip'
         )
+        
+        # Try multiple header formats for maximum browser compatibility
+        response.headers['Content-Disposition'] = f'attachment; filename="{zip_filename}"; filename*=UTF-8\'\'{zip_filename}'
+        response.headers['Content-Type'] = 'application/zip'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        logging.info(f"📦 Response headers set: {dict(response.headers)}")
+        
+        return response
         
     except Exception as e:
         logging.error(f"ZIP download error: {str(e)}")
@@ -2302,9 +2925,12 @@ if __name__ == '__main__':
     print("📱 Web Interface: http://localhost:5000")
     print("🔧 Health Check: http://localhost:5000/health")
     print("=" * 50)
-    
+
     try:
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        # Use Railway's PORT environment variable, fallback to 5000 for local development
+        port = int(os.environ.get('PORT', 5000))
+        print(f"🚀 Starting server on port {port}")
+        app.run(host='0.0.0.0', port=port, debug=True)
     except KeyboardInterrupt:
         print("\n🛑 Server stopped by user")
     finally:
