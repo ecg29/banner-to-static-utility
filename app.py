@@ -1209,12 +1209,31 @@ class ScreenshotService:
                 full_page=False,  # Only capture viewport
                 clip={'x': 0, 'y': 0, 'width': width, 'height': height}
             )
-            
+
             # Always convert to JPG with size optimization for compliance
             try:
-                optimized_jpg_data, final_quality, final_size_kb = optimize_image_to_jpg(screenshot_bytes)
+                # Check if we need to resize due to device_scale_factor
+                from PIL import Image
+                import io as image_io
                 
-                # Final safety check: Ensure file is absolutely under 49KB
+                # Open the captured image to check its actual dimensions
+                temp_image = Image.open(image_io.BytesIO(screenshot_bytes))
+                actual_width, actual_height = temp_image.size
+                
+                # If image is 2x larger due to device_scale_factor, resize it back to target dimensions
+                if actual_width == width * 2 and actual_height == height * 2:
+                    logger.info(f"🔄 Resizing high-DPI capture from {actual_width}x{actual_height} back to {width}x{height}")
+                    # Resize back to target dimensions using high-quality resampling
+                    resized_image = temp_image.resize((width, height), Image.Resampling.LANCZOS)
+                    
+                    # Convert back to bytes
+                    output = image_io.BytesIO()
+                    resized_image.save(output, format='PNG')
+                    screenshot_bytes = output.getvalue()
+                
+                temp_image.close()
+                
+                optimized_jpg_data, final_quality, final_size_kb = optimize_image_to_jpg(screenshot_bytes)                # Final safety check: Ensure file is absolutely under 49KB
                 optimized_jpg_data = ensure_size_limit(optimized_jpg_data, max_size_kb=49)
                 final_size_kb = len(optimized_jpg_data) / 1024
                 
