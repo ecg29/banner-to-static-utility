@@ -49,14 +49,14 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=60, max_quality=95):
+def optimize_image_to_jpg(image_data, max_size_kb=39, min_quality=60, max_quality=95):
     """
     Convert image data to JPG format and optimize to stay under size limit
     Enhanced to preserve text quality better
 
     Args:
         image_data: Raw image data (bytes)
-        max_size_kb: Maximum file size in KB (default: 49)
+        max_size_kb: Maximum file size in KB (default: 39)
         min_quality: Minimum JPG quality to try (default: 60 - better for text)
         max_quality: Maximum JPG quality to start with (default: 95)
 
@@ -110,7 +110,7 @@ def optimize_image_to_jpg(image_data, max_size_kb=49, min_quality=60, max_qualit
         log_to_file(f"Error optimizing image: {str(e)}")
         raise Exception(f"Failed to optimize image: {str(e)}")
 
-def ensure_size_limit(image_data, max_size_kb=49):
+def ensure_size_limit(image_data, max_size_kb=39):
     """
     Final safety check to ensure image is under size limit
     Applies extreme compression if necessary
@@ -1233,8 +1233,10 @@ class ScreenshotService:
                 
                 temp_image.close()
                 
-                optimized_jpg_data, final_quality, final_size_kb = optimize_image_to_jpg(screenshot_bytes)                # Final safety check: Ensure file is absolutely under 49KB
-                optimized_jpg_data = ensure_size_limit(optimized_jpg_data, max_size_kb=49)
+                optimized_jpg_data, final_quality, final_size_kb = optimize_image_to_jpg(screenshot_bytes)
+
+                # Final safety check: Ensure file is absolutely under 39KB
+                optimized_jpg_data = ensure_size_limit(optimized_jpg_data, max_size_kb=39)
                 final_size_kb = len(optimized_jpg_data) / 1024
                 
                 screenshot_base64 = base64.b64encode(optimized_jpg_data).decode('utf-8')
